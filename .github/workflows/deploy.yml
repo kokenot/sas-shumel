@@ -1,0 +1,32 @@
+# .github/workflows/deploy.yml
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # Tukar ini jika cawangan utama anda adalah 'master' atau yang lain
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Jalankan job pada sistem operasi Ubuntu terbaru
+
+    steps:
+      - name: Checkout code # Langkah untuk mendaftar keluar kod dari repositori
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js # Langkah untuk menyediakan persekitaran Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Anda boleh tukar versi Node.js jika perlu
+
+      - name: Install dependencies # Langkah untuk memasang dependensi projek
+        run: npm install
+
+      - name: Build React app # Langkah untuk membina aplikasi React
+        run: npm run build
+
+      - name: Deploy to GitHub Pages # Langkah untuk melakukan deployment menggunakan gh-pages
+        uses: peaceiris/actions-gh-pages@v3 # Menggunakan action pihak ketiga untuk deployment
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Token GitHub yang disediakan secara automatik
+          publish_dir: ./build # Direktori yang akan diterbitkan (hasil binaan React)
