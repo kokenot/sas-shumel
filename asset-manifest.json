@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/sas-shumel/static/css/main.e6c13ad2.css",
+    "main.js": "/sas-shumel/static/js/main.54c379e2.js",
+    "static/js/453.b62091d3.chunk.js": "/sas-shumel/static/js/453.b62091d3.chunk.js",
+    "index.html": "/sas-shumel/index.html",
+    "main.e6c13ad2.css.map": "/sas-shumel/static/css/main.e6c13ad2.css.map",
+    "main.54c379e2.js.map": "/sas-shumel/static/js/main.54c379e2.js.map",
+    "453.b62091d3.chunk.js.map": "/sas-shumel/static/js/453.b62091d3.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.54c379e2.js"
+  ]
+}
