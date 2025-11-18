@@ -1,0 +1,7993 @@
+<!doctype html>
+<html lang="ms">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Pengurusan Aset ICT</title>
+  <script src="/_sdk/element_sdk.js"></script><!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script><!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><!-- QR Code Generator -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><!-- SheetJS for Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><!-- jsPDF for PDF Export -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100%;
+            color: #0f172a;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100%;
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode .sidebar {
+            background: #1e293b;
+            border-right-color: #334155;
+        }
+
+        .dark-mode .logo {
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode .user-card {
+            background: #334155;
+        }
+
+        .dark-mode .nav-link {
+            color: #94a3b8;
+        }
+
+        .dark-mode .nav-link:hover {
+            background: #334155;
+            color: #60a5fa;
+        }
+
+        .dark-mode .nav-link.active {
+            background: #1e40af;
+            color: #ffffff;
+        }
+
+        .dark-mode .main-content {
+            background: #0f172a;
+        }
+
+        .dark-mode .content-card,
+        .dark-mode .stat-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .dark-mode .form-control,
+        .dark-mode .search-input,
+        .dark-mode .filter-select,
+        .dark-mode .pagination-select {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+        }
+
+        .dark-mode table {
+            background: #1e293b;
+        }
+
+        .dark-mode thead {
+            background: #334155;
+        }
+
+        .dark-mode th {
+            color: #94a3b8;
+            border-bottom-color: #475569;
+        }
+
+        .dark-mode td {
+            color: #cbd5e1;
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode tbody tr:hover {
+            background: #334155;
+        }
+
+        .dark-mode .modal-dialog {
+            background: #1e293b;
+        }
+
+        .dark-mode .modal-header {
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode .modal-footer {
+            border-top-color: #334155;
+        }
+
+        .dark-mode .page-title,
+        .dark-mode .card-title,
+        .dark-mode .modal-title,
+        .dark-mode .stat-value {
+            color: #f1f5f9;
+        }
+
+        .dark-mode .page-subtitle,
+        .dark-mode .stat-label {
+            color: #94a3b8;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 0;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 100;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 24px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dark-mode .logo h1 {
+            color: #f1f5f9;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .user-info {
+            padding: 0 24px;
+            margin-bottom: 24px;
+        }
+
+        .user-card {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dark-mode .user-name {
+            color: #f1f5f9;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .message-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .connection-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f0fdf4;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #166534;
+            margin-top: 12px;
+        }
+
+        .connection-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .theme-toggle {
+            margin-top: 12px;
+        }
+
+        .theme-toggle-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .dark-mode .theme-toggle-btn {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .dark-mode .theme-toggle-btn:hover {
+            background: #475569;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 16px;
+        }
+
+        /* Tab Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 16px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .dark-mode .nav-tabs {
+            border-bottom-color: #334155;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .nav-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        .nav-tab {
+            padding: 10px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 6px 6px 0 0;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-tab:hover {
+            background: #f8fafc;
+            color: #3b82f6;
+        }
+
+        .dark-mode .nav-tab:hover {
+            background: #334155;
+        }
+
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .nav-tab-icon {
+            font-size: 16px;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .nav-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 12px 8px;
+            margin-top: 8px;
+        }
+
+        .dark-mode .nav-section-label {
+            color: #64748b;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: #f8fafc;
+            color: #3b82f6;
+        }
+
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 32px;
+            background: #f8fafc;
+            transition: background 0.3s ease;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.blue {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .stat-icon.green {
+            background: #f0fdf4;
+            color: #22c55e;
+        }
+
+        .stat-icon.orange {
+            background: #fff7ed;
+            color: #f97316;
+        }
+
+        .stat-icon.red {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .stat-icon.purple {
+            background: #faf5ff;
+            color: #a855f7;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark-mode .chart-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-icon {
+            font-size: 16px;
+        }
+
+        /* Search */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-purple {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Action Buttons in Table */
+        .table-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn-view {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .action-btn-view:hover {
+            background: #dbeafe;
+        }
+
+        .action-btn-edit {
+            background: #f0fdf4;
+            color: #22c55e;
+        }
+
+        .action-btn-edit:hover {
+            background: #dcfce7;
+        }
+
+        .action-btn-delete {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .action-btn-delete:hover {
+            background: #fee2e2;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-dialog {
+            background: white;
+            margin: 5% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85%;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.2s ease;
+        }
+
+        .modal-dialog.large {
+            max-width: 900px;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .dark-mode .form-label {
+            color: #cbd5e1;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 320px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            border: 1px solid;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .toast-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .toast-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        .toast-warning {
+            background: #fffbeb;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .dark-mode .empty-title {
+            color: #f1f5f9;
+        }
+
+        .empty-text {
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-dark {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #3b82f6;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .dark-mode .pagination {
+            border-top-color: #334155;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .dark-mode .pagination-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+        }
+
+        .dark-mode .pagination-btn:hover:not(:disabled) {
+            background: #475569;
+        }
+
+        .pagination-select {
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* QR Code Display */
+        .qr-display {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .qr-display canvas {
+            margin: 0 auto;
+            display: block;
+        }
+
+        /* API Key Display */
+        .api-key-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark-mode .api-key-item {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .api-key-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .api-key-name {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .dark-mode .api-key-name {
+            color: #f1f5f9;
+        }
+
+        .api-key-value {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            word-break: break-all;
+            border: 1px solid #e2e8f0;
+            margin: 8px 0;
+        }
+
+        .dark-mode .api-key-value {
+            background: #1e293b;
+            border-color: #475569;
+            color: #f1f5f9;
+        }
+
+        .api-key-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .quick-action-btn span:not(.quick-action-icon) {
+                display: none;
+            }
+
+            .quick-action-btn {
+                padding: 8px 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .content-card {
+                padding: 20px;
+            }
+
+            .modal-dialog {
+                margin: 10% auto;
+                width: 95%;
+            }
+
+            .btn-group {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .login-box {
+                padding: 32px 24px;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+        }
+
+        @media print {
+            .sidebar,
+            .header-actions,
+            .filter-bar,
+            .pagination,
+            .action-btn,
+            .btn-group {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            body {
+                background: white;
+            }
+
+            .content-card {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div><!-- Login Screen -->
+  <div id="loginScreen" class="login-container">
+   <div class="login-box">
+    <div class="login-header">
+     <div class="login-logo">
+      ��������
+     </div>
+     <h1 class="login-title">ICT Asset Management</h1>
+     <p class="login-subtitle">Sistem Pengurusan Aset ICT Sekolah</p>
+    </div>
+    <div class="tab-buttons"><button class="tab-btn active" onclick="showLoginTab()">Log Masuk</button> <button class="tab-btn" onclick="showRegisterTab()">Daftar</button>
+    </div><!-- Login Form -->
+    <form id="loginForm" style="display: block;">
+     <div class="form-group"><label class="form-label" for="loginEmail">Email</label> <input type="email" id="loginEmail" class="form-control" placeholder="nama@email.com" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="loginPassword">Kata Laluan</label> <input type="password" id="loginPassword" class="form-control" placeholder="�����•••••••" required>
+     </div><button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;" id="loginBtn"> <span>Log Masuk</span> </button>
+    </form><!-- Register Form -->
+    <form id="registerForm" style="display: none;">
+     <div class="form-group"><label class="form-label" for="registerName">Nama Penuh</label> <input type="text" id="registerName" class="form-control" placeholder="Nama anda" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="registerEmail">Email</label> <input type="email" id="registerEmail" class="form-control" placeholder="nama@email.com" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="registerPassword">Kata Laluan</label> <input type="password" id="registerPassword" class="form-control" placeholder="••••••••" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="registerPhone">Telefon</label> <input type="tel" id="registerPhone" class="form-control" placeholder="012-3456789">
+     </div><button type="submit" class="btn btn-success" style="width: 100%; justify-content: center;" id="registerBtn"> <span>Daftar Akaun</span> </button>
+    </form>
+   </div>
+  </div><!-- Main App -->
+  <div id="mainApp" class="app-container" style="display: none;"><!-- Top Navbar -->
+   <nav class="top-navbar" id="topNavbar">
+    <div class="navbar-left">
+    </div>
+    <div class="navbar-right"><button class="quick-action-btn primary" onclick="showAddAssetModal()" title="Tambah Aset Baru"> <span class="quick-action-icon">➕</span> <span>Tambah Aset</span> </button> <button class="quick-action-btn success" onclick="showAddBorrowingModal()" title="Tambah Pinjaman"> <span class="quick-action-icon">📋</span> <span>Pinjaman</span> </button>
+     <div class="navbar-divider"></div><button class="quick-action-btn secondary" onclick="exportToExcel()" title="Export ke Excel"> <span class="quick-action-icon">��</span> </button> <button class="quick-action-btn secondary" onclick="exportToPDF()" title="Export ke PDF"> <span class="quick-action-icon">📄</span> </button>
+     <div class="navbar-divider"></div><button class="notification-btn" onclick="showNotifications()" title="Notifikasi"> 🔔 <span class="notification-badge" id="navbarNotificationBadge" style="display: none;">0</span> </button>
+    </div>
+   </nav><!-- Sidebar -->
+   <aside class="sidebar" id="sidebar">
+    <div class="logo">
+     <h1>
+      <div class="logo-icon">
+       📱
+      </div><span id="app-title">ICT Asset</span></h1>
+     <div class="connection-badge"><span class="connection-dot"></span> <span id="connection-status">Connected</span>
+     </div>
+    </div>
+    <div class="user-info">
+     <div class="user-card">
+      <div class="user-avatar" id="userAvatar">
+       👤
+      </div>
+      <div class="user-details">
+       <div class="user-name" id="userName">
+        User
+       </div>
+       <div class="user-role" id="userRole">
+        User
+       </div>
+      </div><span class="message-badge" id="unreadBadge" style="display: none;">0</span>
+     </div>
+     <div class="theme-toggle"><button class="theme-toggle-btn" onclick="toggleDarkMode()"> <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span> </button>
+     </div>
+    </div>
+    <nav>
+     <ul class="nav-menu"><!-- Main Section -->
+      <li class="nav-section-label">UTAMA</li>
+      <li class="nav-item"><a class="nav-link active" onclick="showDashboard()"> <span class="nav-icon">📊</span> <span>Dashboard</span> </a></li><!-- Asset Management Section -->
+      <li class="nav-section-label">PENGURUSAN ASET</li>
+      <li class="nav-item"><a class="nav-link" onclick="showAssets()"> <span class="nav-icon">💻</span> <span>Senarai Aset</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showBorrowing()"> <span class="nav-icon">📋</span> <span>Pinjaman</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showTransferHistory()"> <span class="nav-icon">🔄</span> <span>Sejarah Transfer</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showMaintenance()"> <span class="nav-icon">🔧</span> <span>Penyelenggaraan</span> </a></li><!-- Master Data Section -->
+      <li class="nav-section-label">PENGURUSAN DATA</li>
+      <li class="nav-item"><a class="nav-link" onclick="showSchools()"> <span class="nav-icon">🏫</span> <span>Pengurusan Sekolah</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showVendors()"> <span class="nav-icon">🏢</span> <span>Vendor</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showCategories()"> <span class="nav-icon">📂</span> <span>Kategori</span> </a></li><!-- Communication Section -->
+      <li class="nav-section-label">KOMUNIKASI</li>
+      <li class="nav-item"><a class="nav-link" onclick="showMessages()"> <span class="nav-icon">💬</span> <span>Mesej</span> <span class="nav-badge" id="navUnreadBadge" style="display: none;">0</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showNotifications()"> <span class="nav-icon">🔔</span> <span>Notifikasi</span> </a></li><!-- Reports Section -->
+      <li class="nav-section-label">LAPORAN</li>
+      <li class="nav-item"><a class="nav-link" onclick="showReports()"> <span class="nav-icon">📈</span> <span>Laporan &amp; Analitik</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showAuditTrail()"> <span class="nav-icon">🔍</span> <span>Audit Trail</span> </a></li><!-- Admin Section -->
+      <li class="nav-section-label" id="navAdminSection" style="display: none;">PENTADBIRAN</li>
+      <li class="nav-item" id="navUsers" style="display: none;"><a class="nav-link" onclick="showUsers()"> <span class="nav-icon">��</span> <span>Pengguna</span> </a></li>
+      <li class="nav-item" id="navRoles" style="display: none;"><a class="nav-link" onclick="showRoles()"> <span class="nav-icon">🎭</span> <span>Peranan &amp; Akses</span> </a></li>
+      <li class="nav-item" id="navApiKeys" style="display: none;"><a class="nav-link" onclick="showApiKeys()"> <span class="nav-icon">🔑</span> <span>API Keys</span> </a></li>
+      <li class="nav-item" id="navLogs" style="display: none;"><a class="nav-link" onclick="showLogs()"> <span class="nav-icon">📝</span> <span>Log Aktiviti</span> </a></li>
+      <li class="nav-item" id="navSettings" style="display: none;"><a class="nav-link" onclick="showSettings()"> <span class="nav-icon">⚙️</span> <span>Tetapan Sistem</span> </a></li><!-- Quick Actions Section -->
+      <li class="nav-section-label">TINDAKAN PANTAS</li>
+      <li class="nav-item"><a class="nav-link" onclick="showAddAssetModal()"> <span class="nav-icon">➕</span> <span>Tambah Aset</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="exportToExcel()"> <span class="nav-icon">📊</span> <span>Export Excel</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="exportToPDF()"> <span class="nav-icon">📄</span> <span>Export PDF</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="showImportModal()"> <span class="nav-icon">📥</span> <span>Import Data</span> </a></li><!-- Account Section -->
+      <li class="nav-section-label">AKAUN</li>
+      <li class="nav-item"><a class="nav-link" onclick="showProfile()"> <span class="nav-icon">👤</span> <span>Profil Saya</span> </a></li>
+      <li class="nav-item"><a class="nav-link" onclick="logout()"> <span class="nav-icon">��</span> <span>Log Keluar</span> </a></li>
+     </ul>
+    </nav>
+   </aside><!-- Main Content -->
+   <main class="main-content" id="main-content"><!-- Content will be loaded here -->
+   </main>
+  </div><!-- Modals will be added dynamically -->
+  <div id="modalContainer"></div>
+  <script>
+        // === FIREBASE CONFIGURATION ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyCs0kDhAA_fhHB1dsvXYF1ReRG3B3PSQQo",
+            authDomain: "school-asset.firebaseapp.com",
+            projectId: "school-asset",
+            storageBucket: "school-asset.firebasestorage.app",
+            messagingSenderId: "295595607199",
+            appId: "1:295595607199:web:f58cd6e8059d4499d08eaa",
+            measurementId: "G-8ZTLS3YWX7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Firestore Collections
+        const collections = {
+            assets: db.collection('assets'),
+            schools: db.collection('schools'),
+            users: db.collection('users'),
+            vendors: db.collection('vendors'),
+            borrowings: db.collection('borrowings'),
+            transfers: db.collection('transferHistory'),
+            messages: db.collection('messages'),
+            activityLogs: db.collection('activityLogs'),
+            adminLogs: db.collection('adminLogs'),
+            auditTrail: db.collection('auditTrail'),
+            apiKeys: db.collection('apiKeys'),
+            emailNotifications: db.collection('emailNotifications')
+        };
+
+        // Global variables
+        let currentUser = null;
+        let currentAssets = [];
+        let currentSchools = [];
+        let currentUsers = [];
+        let currentVendors = [];
+        let currentBorrowing = [];
+        let currentTransfers = [];
+        let currentMessages = [];
+        let currentLogs = [];
+        let currentApiKeys = [];
+        let currentPage = 'dashboard';
+        let isConnected = false;
+        let unreadCount = 0;
+        let searchTimeout = null;
+        let navigationHistory = [];
+        let currentFilters = {
+            search: '',
+            school: '',
+            status: '',
+            favorites: false
+        };
+        let pagination = {
+            currentPage: 1,
+            itemsPerPage: 25,
+            totalItems: 0
+        };
+        let selectedAssets = new Set();
+        let favoriteAssets = new Set();
+        let chartInstances = {};
+
+        // === DARK MODE ===
+        function toggleDarkMode() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-mode');
+            
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (isDark) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            }
+
+            // Update charts if they exist
+            Object.values(chartInstances).forEach(chart => {
+                if (chart) {
+                    updateChartTheme(chart, isDark);
+                }
+            });
+        }
+
+        function loadDarkModePreference() {
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                const themeIcon = document.getElementById('themeIcon');
+                const themeText = document.getElementById('themeText');
+                if (themeIcon) themeIcon.textContent = '☀️';
+                if (themeText) themeText.textContent = 'Light Mode';
+            }
+        }
+
+        function updateChartTheme(chart, isDark) {
+            const textColor = isDark ? '#f1f5f9' : '#64748b';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+            
+            if (chart.options.scales) {
+                if (chart.options.scales.x) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    chart.options.scales.x.grid.color = gridColor;
+                }
+                if (chart.options.scales.y) {
+                    chart.options.scales.y.ticks.color = textColor;
+                    chart.options.scales.y.grid.color = gridColor;
+                }
+            }
+            
+            if (chart.options.plugins && chart.options.plugins.legend) {
+                chart.options.plugins.legend.labels.color = textColor;
+            }
+            
+            chart.update();
+        }
+
+        // === TOAST NOTIFICATIONS ===
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+            
+            toast.innerHTML = `
+                <span style="font-size: 20px;">${icons[type] || icons.info}</span>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // === AUTHENTICATION ===
+        function showLoginTab() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegisterTab() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> <span>Memuatkan...</span>';
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                await logActivity('LOGIN', 'User logged in');
+                showToast('Berjaya log masuk!', 'success');
+            } catch (error) {
+                showToast('Ralat: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Log Masuk</span>';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> <span>Mendaftar...</span>';
+
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const phone = document.getElementById('registerPhone').value;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await collections.users.doc(userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    role: 'User',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await logActivity('REGISTER', 'New user registered');
+                showToast('Akaun berjaya didaftarkan!', 'success');
+            } catch (error) {
+                showToast('Ralat: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Daftar Akaun</span>';
+            }
+        });
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const userDoc = await collections.users.doc(user.uid).get();
+                if (userDoc.exists) {
+                    currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        ...userDoc.data()
+                    };
+                    
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'flex';
+                    
+                    document.getElementById('userName').textContent = currentUser.name || 'User';
+                    document.getElementById('userRole').textContent = currentUser.role || 'User';
+                    document.getElementById('userAvatar').textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+                    
+                    // Show admin menus
+                    if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
+                        document.getElementById('navAdminSection').style.display = 'block';
+                        document.getElementById('navUsers').style.display = 'block';
+                        document.getElementById('navRoles').style.display = 'block';
+                        document.getElementById('navApiKeys').style.display = 'block';
+                        document.getElementById('navLogs').style.display = 'block';
+                        document.getElementById('navSettings').style.display = 'block';
+                    }
+                    
+                    await initApp();
+                }
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        });
+
+        async function logout() {
+            try {
+                await logActivity('LOGOUT', 'User logged out');
+                await auth.signOut();
+                showToast('Berjaya log keluar', 'success');
+            } catch (error) {
+                showToast('Ralat log keluar: ' + error.message, 'error');
+            }
+        }
+
+        // === LOGGING SYSTEM ===
+        async function logActivity(action, description, targetId = null) {
+            if (!currentUser) return;
+            
+            try {
+                await collections.activityLogs.add({
+                    userId: currentUser.uid || 'unknown',
+                    userName: currentUser.name || 'Unknown User',
+                    userEmail: currentUser.email || 'unknown@email.com',
+                    action: action || 'UNKNOWN_ACTION',
+                    description: description || 'No description',
+                    targetId: targetId || null,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    ipAddress: 'N/A',
+                    userAgent: navigator.userAgent || 'Unknown'
+                });
+            } catch (error) {
+                console.error('Error logging activity:', error);
+            }
+        }
+
+        async function logAdminAction(action, description, targetUserId = null) {
+            if (!currentUser) return;
+            
+            try {
+                await collections.adminLogs.add({
+                    adminId: currentUser.uid || 'unknown',
+                    adminName: currentUser.name || 'Unknown Admin',
+                    action: action || 'UNKNOWN_ACTION',
+                    description: description || 'No description',
+                    targetUserId: targetUserId || null,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error logging admin action:', error);
+            }
+        }
+
+        async function logAudit(entityType, entityId, action, oldValue, newValue, field = null) {
+            if (!currentUser) return;
+            
+            try {
+                await collections.auditTrail.add({
+                    userId: currentUser.uid || 'unknown',
+                    userName: currentUser.name || 'Unknown User',
+                    entityType: entityType || 'unknown',
+                    entityId: entityId || 'unknown',
+                    action: action || 'UNKNOWN_ACTION',
+                    field: field || null,
+                    oldValue: oldValue || null,
+                    newValue: newValue || null,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error logging audit:', error);
+            }
+        }
+
+        // === INITIALIZATION ===
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusText = document.getElementById('connection-status');
+            
+            if (statusText) {
+                statusText.textContent = connected ? 'Connected' : 'Disconnected';
+            }
+        }
+
+        function setupRealtimeListeners() {
+            // Setup maintenance listener
+            setupMaintenanceListener();
+            
+            // Assets listener
+            collections.assets.onSnapshot((snapshot) => {
+                currentAssets = [];
+                snapshot.forEach((doc) => {
+                    currentAssets.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'assets') {
+                    applyFiltersAndRender();
+                } else if (currentPage === 'dashboard') {
+                    updateDashboardStats();
+                    updateDashboardCharts();
+                }
+            }, (error) => {
+                console.error('Error listening to assets:', error);
+                updateConnectionStatus(false);
+            });
+
+            // Schools listener
+            collections.schools.onSnapshot((snapshot) => {
+                currentSchools = [];
+                snapshot.forEach((doc) => {
+                    currentSchools.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'schools') {
+                    renderSchoolsTable();
+                }
+            });
+
+            // Users listener
+            collections.users.onSnapshot((snapshot) => {
+                currentUsers = [];
+                snapshot.forEach((doc) => {
+                    currentUsers.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'users') {
+                    renderUsersTable();
+                }
+            });
+
+            // Vendors listener
+            collections.vendors.onSnapshot((snapshot) => {
+                currentVendors = [];
+                snapshot.forEach((doc) => {
+                    currentVendors.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'vendors') {
+                    renderVendorsTable();
+                }
+            });
+
+            // Borrowing listener - using 'borrowings' collection
+            db.collection('borrowings').onSnapshot((snapshot) => {
+                currentBorrowing = [];
+                snapshot.forEach((doc) => {
+                    currentBorrowing.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'borrowing') {
+                    updateBorrowingStats();
+                    renderBorrowingTable();
+                }
+            }, (error) => {
+                console.error('Error listening to borrowings:', error);
+            });
+
+            // Transfers listener
+            collections.transfers.onSnapshot((snapshot) => {
+                currentTransfers = [];
+                snapshot.forEach((doc) => {
+                    currentTransfers.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'transfers') {
+                    updateTransferStats();
+                    renderTransfersTable();
+                }
+            }, (error) => {
+                console.error('Error listening to transfers:', error);
+            });
+
+            // Messages listener
+            if (currentUser) {
+                collections.messages
+                    .where('recipientId', '==', currentUser.uid)
+                    .onSnapshot((snapshot) => {
+                        currentMessages = [];
+                        unreadCount = 0;
+                        snapshot.forEach((doc) => {
+                            const msg = {
+                                id: doc.id,
+                                ...doc.data()
+                            };
+                            currentMessages.push(msg);
+                            if (!msg.read) unreadCount++;
+                        });
+                        
+                        updateUnreadBadge();
+                        
+                        if (currentPage === 'messages') {
+                            renderMessagesTable();
+                        }
+                    });
+            }
+
+            // Activity logs listener
+            collections.activityLogs
+                .orderBy('timestamp', 'desc')
+                .limit(100)
+                .onSnapshot((snapshot) => {
+                    currentLogs = [];
+                    snapshot.forEach((doc) => {
+                        currentLogs.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    
+                    if (currentPage === 'logs') {
+                        renderLogsTable();
+                    }
+                });
+
+            // API Keys listener
+            if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Super Admin')) {
+                collections.apiKeys.onSnapshot((snapshot) => {
+                    currentApiKeys = [];
+                    snapshot.forEach((doc) => {
+                        currentApiKeys.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    
+                    if (currentPage === 'apiKeys') {
+                        renderApiKeysTable();
+                    }
+                });
+            }
+        }
+
+        function updateUnreadBadge() {
+            const badge = document.getElementById('unreadBadge');
+            const navBadge = document.getElementById('navUnreadBadge');
+            
+            if (unreadCount > 0) {
+                if (badge) {
+                    badge.textContent = unreadCount;
+                    badge.style.display = 'block';
+                }
+                if (navBadge) {
+                    navBadge.textContent = unreadCount;
+                    navBadge.style.display = 'block';
+                }
+            } else {
+                if (badge) badge.style.display = 'none';
+                if (navBadge) navBadge.style.display = 'none';
+            }
+        }
+
+        async function initializeDefaultData() {
+            // Schools data is already in Firestore, no need to initialize
+            // The realtime listeners will automatically load the data
+            try {
+                const schoolsSnapshot = await collections.schools.get();
+                console.log(`Loaded ${schoolsSnapshot.size} schools from Firestore`);
+            } catch (error) {
+                console.error('Error checking schools data:', error);
+            }
+        }
+
+        async function initApp() {
+            try {
+                // Step 1: Check network connectivity
+                updateConnectionStatus(true);
+
+                // Step 2: Load dark mode preference early
+                loadDarkModePreference();
+
+                // Step 3: Load favorites from localStorage with error handling
+                if (currentUser && currentUser.uid) {
+                    try {
+                        const savedFavorites = localStorage.getItem('favoriteAssets_' + currentUser.uid);
+                        if (savedFavorites) {
+                            const parsed = JSON.parse(savedFavorites);
+                            favoriteAssets = new Set(Array.isArray(parsed) ? parsed : []);
+                        }
+                    } catch (e) {
+                        console.warn('Error loading favorites from localStorage:', e);
+                        favoriteAssets = new Set();
+                        // Clear corrupted data
+                        try {
+                            localStorage.removeItem('favoriteAssets_' + currentUser.uid);
+                        } catch (clearError) {
+                            console.warn('Could not clear corrupted localStorage:', clearError);
+                        }
+                    }
+                }
+
+                // Step 4: Initialize default data FIRST (before listeners)
+                await initializeDefaultData();
+                
+                // Step 5: Setup realtime listeners AFTER default data
+                setupRealtimeListeners();
+
+                // Step 6: Initialize Element SDK (if available)
+                try {
+                    if (window.elementSdk && typeof window.elementSdk.init === 'function') {
+                        window.elementSdk.init({
+                            defaultConfig: {
+                                app_title: "ICT Asset",
+                                dashboard_subtitle: "Selamat datang"
+                            },
+                            onConfigChange: async (config) => {
+                                const titleEl = document.getElementById('app-title');
+                                if (titleEl) {
+                                    titleEl.textContent = config.app_title || "ICT Asset";
+                                }
+                                
+                                const subtitleEl = document.getElementById('dashboard-subtitle');
+                                if (subtitleEl) {
+                                    subtitleEl.textContent = config.dashboard_subtitle || "Selamat datang";
+                                }
+                            },
+                            mapToCapabilities: (config) => ({
+                                recolorables: [],
+                                borderables: [],
+                                fontEditable: undefined,
+                                fontSizeable: undefined
+                            }),
+                            mapToEditPanelValues: (config) => new Map([
+                                ["app_title", config.app_title || "ICT Asset"],
+                                ["dashboard_subtitle", config.dashboard_subtitle || "Selamat datang"]
+                            ])
+                        });
+                    }
+                } catch (sdkError) {
+                    console.warn('Element SDK initialization skipped:', sdkError);
+                    // Continue without SDK - non-critical feature
+                }
+                
+                // Step 7: Show dashboard
+                showDashboard();
+                
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                updateConnectionStatus(false);
+                showToast('Ralat memulakan aplikasi. Sila muat semula halaman.', 'error');
+            }
+        }
+
+        // === NAVIGATION ===
+        function addToNavigationHistory(page) {
+            // Don't add if it's the same as the last page
+            if (navigationHistory.length > 0 && navigationHistory[navigationHistory.length - 1] === page) {
+                return;
+            }
+            navigationHistory.push(page);
+            updateBackButton();
+        }
+
+        function updateBackButton() {
+            // Back button removed from navbar
+        }
+
+        function goBack() {
+            if (navigationHistory.length <= 1) return;
+            
+            // Remove current page
+            navigationHistory.pop();
+            
+            // Get previous page
+            const previousPage = navigationHistory[navigationHistory.length - 1];
+            
+            // Navigate without adding to history
+            navigateToPage(previousPage, false);
+        }
+
+        function navigateToPage(page, addToHistory = true) {
+            if (addToHistory) {
+                addToNavigationHistory(page);
+            }
+            
+            currentPage = page;
+            updateActiveNav(page);
+            
+            // Call the appropriate render function
+            const pageMap = {
+                'dashboard': showDashboard,
+                'assets': showAssets,
+                'borrowing': showBorrowing,
+                'transfers': showTransferHistory,
+                'maintenance': showMaintenance,
+                'schools': showSchools,
+                'vendors': showVendors,
+                'categories': showCategories,
+                'messages': showMessages,
+                'notifications': showNotifications,
+                'reports': showReports,
+                'auditTrail': showAuditTrail,
+                'users': showUsers,
+                'roles': showRoles,
+                'apiKeys': showApiKeys,
+                'logs': showLogs,
+                'settings': showSettings,
+                'profile': showProfile
+            };
+            
+            if (pageMap[page]) {
+                // Don't call the function, just update the UI
+                // The function will be called by the original navigation
+            }
+        }
+
+        function updateActiveNav(page) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const pageMap = {
+                'dashboard': 0,
+                'assets': 1,
+                'borrowing': 2,
+                'transfers': 3,
+                'schools': 4,
+                'vendors': 5,
+                'messages': 6,
+                'users': 7,
+                'apiKeys': 8,
+                'logs': 9,
+                'reports': 10
+            };
+            
+            const links = document.querySelectorAll('.nav-link');
+            if (links[pageMap[page]]) {
+                links[pageMap[page]].classList.add('active');
+            }
+
+            // Update navbar breadcrumb
+            updateNavbarBreadcrumb(page);
+            updateBackButton();
+        }
+
+        function updateNavbarBreadcrumb(page) {
+            const pageNames = {
+                'dashboard': 'Dashboard',
+                'assets': 'Senarai Aset',
+                'borrowing': 'Pinjaman',
+                'transfers': 'Sejarah Transfer',
+                'maintenance': 'Penyelenggaraan',
+                'schools': 'Sekolah',
+                'vendors': 'Vendor',
+                'categories': 'Kategori',
+                'messages': 'Mesej',
+                'notifications': 'Notifikasi',
+                'reports': 'Laporan & Analitik',
+                'auditTrail': 'Audit Trail',
+                'users': 'Pengguna',
+                'roles': 'Peranan & Akses',
+                'apiKeys': 'API Keys',
+                'logs': 'Log Aktiviti',
+                'settings': 'Tetapan Sistem',
+                'profile': 'Profil Saya'
+            };
+
+            const pageNameEl = document.getElementById('currentPageName');
+            if (pageNameEl) {
+                pageNameEl.textContent = pageNames[page] || 'Dashboard';
+            }
+        }
+
+        function showDashboard() {
+            addToNavigationHistory('dashboard');
+            currentPage = 'dashboard';
+            updateActiveNav('dashboard');
+            renderDashboard();
+        }
+
+        function showAssets() {
+            addToNavigationHistory('assets');
+            currentPage = 'assets';
+            updateActiveNav('assets');
+            renderAssets();
+        }
+
+        function showBorrowing() {
+            addToNavigationHistory('borrowing');
+            currentPage = 'borrowing';
+            updateActiveNav('borrowing');
+            renderBorrowing();
+        }
+
+        function showTransferHistory() {
+            addToNavigationHistory('transfers');
+            currentPage = 'transfers';
+            updateActiveNav('transfers');
+            renderTransferHistory();
+        }
+
+        function showSchools() {
+            addToNavigationHistory('schools');
+            currentPage = 'schools';
+            updateActiveNav('schools');
+            renderSchools();
+        }
+
+        function showVendors() {
+            addToNavigationHistory('vendors');
+            currentPage = 'vendors';
+            updateActiveNav('vendors');
+            renderVendors();
+        }
+
+        function showMessages() {
+            addToNavigationHistory('messages');
+            currentPage = 'messages';
+            updateActiveNav('messages');
+            renderMessages();
+        }
+
+        function showUsers() {
+            addToNavigationHistory('users');
+            currentPage = 'users';
+            updateActiveNav('users');
+            renderUsers();
+        }
+
+        function showApiKeys() {
+            addToNavigationHistory('apiKeys');
+            currentPage = 'apiKeys';
+            updateActiveNav('apiKeys');
+            renderApiKeys();
+        }
+
+        function showLogs() {
+            addToNavigationHistory('logs');
+            currentPage = 'logs';
+            updateActiveNav('logs');
+            renderLogs();
+        }
+
+        function showReports() {
+            addToNavigationHistory('reports');
+            currentPage = 'reports';
+            updateActiveNav('reports');
+            renderReports();
+        }
+
+        // === DASHBOARD ===
+        function renderDashboard() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Dashboard</h1>
+                            <p class="page-subtitle" id="dashboard-subtitle">Selamat datang, ${currentUser.name}</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportToExcel()">
+                                <span class="btn-icon">📊</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddAssetModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Aset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="filterByStatus('')">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">💻</div>
+                        </div>
+                        <div class="stat-value" id="total-assets">0</div>
+                        <div class="stat-label">Jumlah Aset</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('BAIK')">
+                        <div class="stat-header">
+                            <div class="stat-icon green">✓</div>
+                        </div>
+                        <div class="stat-value" id="available-assets">0</div>
+                        <div class="stat-label">Status Baik</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('LUPUS')">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">⚠</div>
+                        </div>
+                        <div class="stat-value" id="in-use-assets">0</div>
+                        <div class="stat-label">Status Lupus</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('ROSAK')">
+                        <div class="stat-header">
+                            <div class="stat-icon red">✕</div>
+                        </div>
+                        <div class="stat-value" id="maintenance-assets">0</div>
+                        <div class="stat-label">Rosak/Hilang</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">📋</div>
+                        </div>
+                        <div class="stat-value" id="borrowed-assets">0</div>
+                        <div class="stat-label">Dipinjam</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3 class="card-title">Status Aset</h3>
+                        <div class="chart-container">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="card-title">Aset Mengikut Tahun</h3>
+                        <div class="chart-container">
+                            <canvas id="yearChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="card-title">Kategori Aset</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Tindakan Pantas</h3>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="showAssets()">
+                            <span class="btn-icon">💻</span>
+                            <span>Urus Aset</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="showBorrowing()">
+                            <span class="btn-icon">📋</span>
+                            <span>Pinjaman</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="showTransferHistory()">
+                            <span class="btn-icon">🔄</span>
+                            <span>Transfer</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportToExcel()">
+                            <span class="btn-icon">����</span>
+                            <span>Export Excel</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportToPDF()">
+                            <span class="btn-icon">📄</span>
+                            <span>Export PDF</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="showImportModal()">
+                            <span class="btn-icon">📥</span>
+                            <span>Import Data</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            updateDashboardStats();
+            updateDashboardCharts();
+        }
+
+        function updateDashboardStats() {
+            const totalAssets = currentAssets.length;
+            const baikAssets = currentAssets.filter(asset => asset.status === 'BAIK').length;
+            const lupusAssets = currentAssets.filter(asset => asset.status === 'LUPUS').length;
+            const rosakAssets = currentAssets.filter(asset => asset.status === 'ROSAK' || asset.status === 'HILANG').length;
+            const borrowedAssets = currentBorrowing.filter(b => b.status === 'BORROWED').length;
+
+            const totalEl = document.getElementById('total-assets');
+            const availableEl = document.getElementById('available-assets');
+            const inUseEl = document.getElementById('in-use-assets');
+            const maintenanceEl = document.getElementById('maintenance-assets');
+            const borrowedEl = document.getElementById('borrowed-assets');
+
+            if (totalEl) totalEl.textContent = totalAssets;
+            if (availableEl) availableEl.textContent = baikAssets;
+            if (inUseEl) inUseEl.textContent = lupusAssets;
+            if (maintenanceEl) maintenanceEl.textContent = rosakAssets;
+            if (borrowedEl) borrowedEl.textContent = borrowedAssets;
+        }
+
+        function updateDashboardCharts() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#f1f5f9' : '#64748b';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+            // Status Chart (Pie)
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                if (chartInstances.status) {
+                    chartInstances.status.destroy();
+                }
+
+                const statusData = {
+                    'BAIK': currentAssets.filter(a => a.status === 'BAIK').length,
+                    'LUPUS': currentAssets.filter(a => a.status === 'LUPUS').length,
+                    'ROSAK': currentAssets.filter(a => a.status === 'ROSAK').length,
+                    'HILANG': currentAssets.filter(a => a.status === 'HILANG').length
+                };
+
+                chartInstances.status = new Chart(statusCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(statusData),
+                        datasets: [{
+                            data: Object.values(statusData),
+                            backgroundColor: ['#22c55e', '#f59e0b', '#ef4444', '#991b1b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: textColor }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Year Chart (Line)
+            const yearCtx = document.getElementById('yearChart');
+            if (yearCtx) {
+                if (chartInstances.year) {
+                    chartInstances.year.destroy();
+                }
+
+                const yearData = {};
+                currentAssets.forEach(asset => {
+                    const year = asset.tahunPeroleh || 'Unknown';
+                    yearData[year] = (yearData[year] || 0) + 1;
+                });
+
+                const sortedYears = Object.keys(yearData).sort();
+
+                chartInstances.year = new Chart(yearCtx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedYears,
+                        datasets: [{
+                            label: 'Jumlah Aset',
+                            data: sortedYears.map(year => yearData[year]),
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: textColor },
+                                grid: { color: gridColor }
+                            },
+                            x: {
+                                ticks: { color: textColor },
+                                grid: { color: gridColor }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Category Chart (Doughnut)
+            const categoryCtx = document.getElementById('categoryChart');
+            if (categoryCtx) {
+                if (chartInstances.category) {
+                    chartInstances.category.destroy();
+                }
+
+                const categoryData = {};
+                currentAssets.forEach(asset => {
+                    const category = asset.kategori || 'Lain-lain';
+                    categoryData[category] = (categoryData[category] || 0) + 1;
+                });
+
+                chartInstances.category = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(categoryData),
+                        datasets: [{
+                            data: Object.values(categoryData),
+                            backgroundColor: ['#3b82f6', '#8b5cf6', '#22c55e', '#f59e0b', '#ef4444']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: textColor }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function filterByStatus(status) {
+            currentFilters.status = status;
+            showAssets();
+        }
+
+        // === ASSETS PAGE ===
+        function renderAssets() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Pengurusan Aset</h1>
+                            <p class="page-subtitle">Urus semua aset ICT anda di sini</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportToExcel()">
+                                <span class="btn-icon">📊</span>
+                                <span>Excel</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportToPDF()">
+                                <span class="btn-icon">📄</span>
+                                <span>PDF</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddAssetModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Aset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="nav-tabs">
+                    <a class="nav-tab active" onclick="switchAssetTab('all', event)">
+                        <span class="nav-tab-icon">📋</span>
+                        <span>Semua Aset</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchAssetTab('baik', event)">
+                        <span class="nav-tab-icon">✓</span>
+                        <span>Status Baik</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchAssetTab('lupus', event)">
+                        <span class="nav-tab-icon">⚠</span>
+                        <span>Status Lupus</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchAssetTab('rosak', event)">
+                        <span class="nav-tab-icon">✕</span>
+                        <span>Rosak/Hilang</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchAssetTab('favorites', event)">
+                        <span class="nav-tab-icon">⭐</span>
+                        <span>Kegemaran</span>
+                    </a>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Aset</h3>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="showImportModal()">
+                                <span class="btn-icon">📥</span>
+                                <span>Import</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="bulkPrintLabels()" id="bulkPrintBtn" style="display: none;">
+                                <span class="btn-icon">🖨���������</span>
+                                <span>Print Label</span>
+                            </button>
+                            <button class="btn btn-warning" onclick="bulkEdit()" id="bulkEditBtn" style="display: none;">
+                                <span class="btn-icon">✏️</span>
+                                <span>Edit</span>
+                            </button>
+                            <button class="btn btn-danger" onclick="bulkDelete()" id="bulkDeleteBtn" style="display: none;">
+                                <span class="btn-icon">🗑️</span>
+                                <span>Padam</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Cari aset..." 
+                               onkeyup="handleSearch(this.value)" value="${currentFilters.search}">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleSchoolFilter(this.value)">
+                            <option value="">Semua Sekolah</option>
+                            ${currentSchools.map(school => 
+                                `<option value="${school.id}" ${currentFilters.school === school.id ? 'selected' : ''}>${school.code} - ${school.name}</option>`
+                            ).join('')}
+                        </select>
+                        <select class="filter-select" onchange="handleStatusFilter(this.value)">
+                            <option value="">Semua Status</option>
+                            <option value="BAIK" ${currentFilters.status === 'BAIK' ? 'selected' : ''}>BAIK</option>
+                            <option value="LUPUS" ${currentFilters.status === 'LUPUS' ? 'selected' : ''}>LUPUS</option>
+                            <option value="ROSAK" ${currentFilters.status === 'ROSAK' ? 'selected' : ''}>ROSAK</option>
+                            <option value="HILANG" ${currentFilters.status === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="toggleFavorites()">
+                            <span class="btn-icon">${currentFilters.favorites ? '⭐' : '☆'}</span>
+                            <span>Kegemaran</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" onchange="toggleSelectAll(this.checked)"></th>
+                                    <th>⭐</th>
+                                    <th>Nama Komputer</th>
+                                    <th>Jenama/Model</th>
+                                    <th>No. Casis</th>
+                                    <th>Lokasi</th>
+                                    <th>Pengguna</th>
+                                    <th>Status</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assets-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            Menunjukkan <span id="showing-start">0</span> - <span id="showing-end">0</span> daripada <span id="total-items">0</span>
+                        </div>
+                        <div class="pagination-controls">
+                            <select class="pagination-select" onchange="changeItemsPerPage(this.value)">
+                                <option value="25" ${pagination.itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                                <option value="50" ${pagination.itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                                <option value="100" ${pagination.itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                                <option value="200" ${pagination.itemsPerPage === 200 ? 'selected' : ''}>200</option>
+                            </select>
+                            <button class="pagination-btn" onclick="previousPage()" id="prevBtn">�� Sebelum</button>
+                            <span id="page-info">Halaman 1</span>
+                            <button class="pagination-btn" onclick="nextPage()" id="nextBtn">Seterusnya →</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            applyFiltersAndRender();
+        }
+
+        function handleSearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentFilters.search = value;
+                pagination.currentPage = 1;
+                applyFiltersAndRender();
+            }, 300);
+        }
+
+        function handleSchoolFilter(value) {
+            currentFilters.school = value;
+            pagination.currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function handleStatusFilter(value) {
+            currentFilters.status = value;
+            pagination.currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function toggleFavorites() {
+            currentFilters.favorites = !currentFilters.favorites;
+            pagination.currentPage = 1;
+            renderAssets();
+        }
+
+        function clearFilters() {
+            currentFilters = {
+                search: '',
+                school: '',
+                status: '',
+                favorites: false
+            };
+            pagination.currentPage = 1;
+            renderAssets();
+        }
+
+        function switchAssetTab(tab, event) {
+            // Update active tab
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.nav-tab').classList.add('active');
+
+            // Reset filters and apply tab filter
+            currentFilters = {
+                search: '',
+                school: '',
+                status: '',
+                favorites: false
+            };
+
+            switch(tab) {
+                case 'all':
+                    // Show all assets
+                    break;
+                case 'baik':
+                    currentFilters.status = 'BAIK';
+                    break;
+                case 'lupus':
+                    currentFilters.status = 'LUPUS';
+                    break;
+                case 'rosak':
+                    currentFilters.status = 'ROSAK';
+                    break;
+                case 'favorites':
+                    currentFilters.favorites = true;
+                    break;
+            }
+
+            pagination.currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function applyFiltersAndRender() {
+            let filtered = [...currentAssets];
+
+            // Apply search filter
+            if (currentFilters.search) {
+                const search = currentFilters.search.toLowerCase();
+                filtered = filtered.filter(asset => 
+                    (asset.namaKomputer || '').toLowerCase().includes(search) ||
+                    (asset.jenamModel || '').toLowerCase().includes(search) ||
+                    (asset.noCasis || '').toLowerCase().includes(search) ||
+                    (asset.pengguna || '').toLowerCase().includes(search) ||
+                    (asset.daftarHarta || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply school filter
+            if (currentFilters.school) {
+                filtered = filtered.filter(asset => asset.schoolId === currentFilters.school);
+            }
+
+            // Apply status filter
+            if (currentFilters.status) {
+                filtered = filtered.filter(asset => asset.status === currentFilters.status);
+            }
+
+            // Apply favorites filter
+            if (currentFilters.favorites) {
+                filtered = filtered.filter(asset => favoriteAssets.has(asset.id));
+            }
+
+            pagination.totalItems = filtered.length;
+            renderAssetsTable(filtered);
+            updatePaginationInfo();
+        }
+
+        function renderAssetsTable(assets = currentAssets) {
+            const tbody = document.getElementById('assets-tbody');
+            if (!tbody) return;
+
+            if (assets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-icon">📱</div>
+                                <div class="empty-title">Tiada Aset</div>
+                                <div class="empty-text">Klik "Tambah Aset" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Pagination
+            const start = (pagination.currentPage - 1) * pagination.itemsPerPage;
+            const end = start + pagination.itemsPerPage;
+            const paginatedAssets = assets.slice(start, end);
+
+            tbody.innerHTML = paginatedAssets.map(asset => `
+                <tr>
+                    <td><input type="checkbox" onchange="toggleAssetSelection('${asset.id}', this.checked)" ${selectedAssets.has(asset.id) ? 'checked' : ''}></td>
+                    <td>
+                        <button class="favorite-btn" onclick="toggleFavorite('${asset.id}')">
+                            ${favoriteAssets.has(asset.id) ? '⭐' : '☆'}
+                        </button>
+                    </td>
+                    <td><strong>${asset.namaKomputer || 'N/A'}</strong></td>
+                    <td>${asset.jenamModel || 'N/A'}</td>
+                    <td>${asset.noCasis || 'N/A'}</td>
+                    <td>${getSchoolName(asset.schoolId) || 'Tiada'}</td>
+                    <td>${asset.pengguna || 'Tiada'}</td>
+                    <td>${getStatusBadge(asset.status)}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="action-btn action-btn-view" onclick="showAssetDetails('${asset.id}')" title="Lihat">
+                                👁️
+                            </button>
+                            <button class="action-btn action-btn-view" onclick="showQRCode('${asset.id}')" title="QR Code">
+                                ��
+                            </button>
+                            <button class="action-btn action-btn-edit" onclick="showEditAssetModal('${asset.id}')" title="Edit">
+                                ✏️
+                            </button>
+                            <button class="action-btn action-btn-delete" onclick="confirmDeleteAsset('${asset.id}')" title="Padam">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleSelectAll(checked) {
+            const start = (pagination.currentPage - 1) * pagination.itemsPerPage;
+            const end = start + pagination.itemsPerPage;
+            const paginatedAssets = currentAssets.slice(start, end);
+
+            if (checked) {
+                paginatedAssets.forEach(asset => selectedAssets.add(asset.id));
+            } else {
+                paginatedAssets.forEach(asset => selectedAssets.delete(asset.id));
+            }
+            updateBulkButtons();
+            renderAssetsTable();
+        }
+
+        function toggleAssetSelection(assetId, checked) {
+            if (checked) {
+                selectedAssets.add(assetId);
+            } else {
+                selectedAssets.delete(assetId);
+            }
+            updateBulkButtons();
+        }
+
+        function updateBulkButtons() {
+            const bulkEditBtn = document.getElementById('bulkEditBtn');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const bulkPrintBtn = document.getElementById('bulkPrintBtn');
+            
+            if (bulkEditBtn && bulkDeleteBtn && bulkPrintBtn) {
+                if (selectedAssets.size > 0) {
+                    bulkEditBtn.style.display = 'inline-flex';
+                    bulkDeleteBtn.style.display = 'inline-flex';
+                    bulkPrintBtn.style.display = 'inline-flex';
+                } else {
+                    bulkEditBtn.style.display = 'none';
+                    bulkDeleteBtn.style.display = 'none';
+                    bulkPrintBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleFavorite(assetId) {
+            if (favoriteAssets.has(assetId)) {
+                favoriteAssets.delete(assetId);
+            } else {
+                favoriteAssets.add(assetId);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('favoriteAssets_' + currentUser.uid, JSON.stringify([...favoriteAssets]));
+            
+            applyFiltersAndRender();
+        }
+
+        function changeItemsPerPage(value) {
+            pagination.itemsPerPage = parseInt(value);
+            pagination.currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function previousPage() {
+            if (pagination.currentPage > 1) {
+                pagination.currentPage--;
+                applyFiltersAndRender();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(pagination.totalItems / pagination.itemsPerPage);
+            if (pagination.currentPage < totalPages) {
+                pagination.currentPage++;
+                applyFiltersAndRender();
+            }
+        }
+
+        function updatePaginationInfo() {
+            const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
+            const end = Math.min(start + pagination.itemsPerPage - 1, pagination.totalItems);
+            const totalPages = Math.ceil(pagination.totalItems / pagination.itemsPerPage);
+
+            const startEl = document.getElementById('showing-start');
+            const endEl = document.getElementById('showing-end');
+            const totalEl = document.getElementById('total-items');
+            const pageInfo = document.getElementById('page-info');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (startEl) startEl.textContent = pagination.totalItems > 0 ? start : 0;
+            if (endEl) endEl.textContent = end;
+            if (totalEl) totalEl.textContent = pagination.totalItems;
+            if (pageInfo) pageInfo.textContent = `Halaman ${pagination.currentPage} / ${totalPages || 1}`;
+            if (prevBtn) prevBtn.disabled = pagination.currentPage === 1;
+            if (nextBtn) nextBtn.disabled = pagination.currentPage >= totalPages;
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'BAIK': { text: 'BAIK', class: 'badge-success' },
+                'LUPUS': { text: 'LUPUS', class: 'badge-warning' },
+                'ROSAK': { text: 'ROSAK', class: 'badge-danger' },
+                'HILANG': { text: 'HILANG', class: 'badge-danger' }
+            };
+            
+            const statusInfo = statusMap[status] || { text: status, class: 'badge-info' };
+            return `<span class="badge ${statusInfo.class}">
+                <span class="badge-dot"></span>
+                ${statusInfo.text}
+            </span>`;
+        }
+
+        function getSchoolName(schoolId) {
+            if (!schoolId) return 'Tiada';
+            const school = currentSchools.find(s => s.id === schoolId);
+            if (school) {
+                return `${school.code} - ${school.name}`;
+            }
+            return schoolId;
+        }
+
+        // === ASSET DETAIL VIEW ===
+        async function showAssetDetails(assetId) {
+            const asset = currentAssets.find(a => a.id === assetId);
+            if (!asset) {
+                showToast('Aset tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Aset - ${asset.namaKomputer || 'N/A'}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nama Komputer</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.namaKomputer || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jenama/Model</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.jenamModel || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">No. Casis</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.noCasis || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daftar Harta (DHM)</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.daftarHarta || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Harga (RM)</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.harga ? 'RM ' + parseFloat(asset.harga).toFixed(2) : 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tahun Peroleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.tahunPeroleh || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Lokasi</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.lokasi || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pengguna</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.pengguna || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Sekolah</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getSchoolName(asset.schoolId) || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getStatusBadge(asset.status)}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Sumber</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.sumber || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kategori</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${asset.kategori || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        <button class="btn btn-primary" onclick="showQRCode('${assetId}')">
+                            <span class="btn-icon">📱</span>
+                            <span>QR Code</span>
+                        </button>
+                        <button class="btn btn-success" onclick="closeModal(this); showEditAssetModal('${assetId}')">
+                            <span class="btn-icon">���️</span>
+                            <span>Edit</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            await logActivity('VIEW_ASSET', `Viewed asset details: ${asset.namaKomputer}`, assetId);
+        }
+
+        // === QR CODE FUNCTIONS ===
+        async function showQRCode(assetId) {
+            const asset = currentAssets.find(a => a.id === assetId);
+            if (!asset) return;
+
+            const qrData = `
+Nama: ${asset.namaKomputer || 'N/A'}
+DHM: ${asset.daftarHarta || 'N/A'}
+Model: ${asset.jenamModel || 'N/A'}
+Casis: ${asset.noCasis || 'N/A'}
+Status: ${asset.status || 'N/A'}
+            `.trim();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">QR Code - ${asset.namaKomputer}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="qr-display" id="qrDisplay_${assetId}"></div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <p><strong>Nama:</strong> ${asset.namaKomputer || 'N/A'}</p>
+                            <p><strong>DHM:</strong> ${asset.daftarHarta || 'N/A'}</p>
+                            <p><strong>Model:</strong> ${asset.jenamModel || 'N/A'}</p>
+                            <p><strong>Casis:</strong> ${asset.noCasis || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${asset.status || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        <button class="btn btn-primary" onclick="downloadQRCode('${assetId}')">
+                            <span class="btn-icon">📥</span>
+                            <span>Download PNG</span>
+                        </button>
+                        <button class="btn btn-success" onclick="printQRCode('${assetId}')">
+                            <span class="btn-icon">🖨️</span>
+                            <span>Print</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Generate QR Code
+            const qrDisplay = document.getElementById('qrDisplay_' + assetId);
+            
+            // Create a div for QRCode library
+            const qrDiv = document.createElement('div');
+            qrDiv.id = 'qrCanvas_' + assetId;
+            qrDiv.style.display = 'inline-block';
+            qrDisplay.appendChild(qrDiv);
+            
+            try {
+                new QRCode(qrDiv, {
+                    text: qrData,
+                    width: 300,
+                    height: 300,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (error) {
+                showToast('Ralat menjana QR code', 'error');
+                console.error('QR Code error:', error);
+            }
+
+            await logActivity('VIEW_QR', `Viewed QR code for asset: ${asset.namaKomputer}`, assetId);
+        }
+
+        async function downloadQRCode(assetId) {
+            const qrDiv = document.getElementById('qrCanvas_' + assetId);
+            if (!qrDiv) return;
+
+            const canvas = qrDiv.querySelector('canvas');
+            if (!canvas) {
+                showToast('QR code tidak dijumpai', 'error');
+                return;
+            }
+
+            const asset = currentAssets.find(a => a.id === assetId);
+            const link = document.createElement('a');
+            link.download = `QR_${asset.namaKomputer || assetId}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+
+            await logActivity('DOWNLOAD_QR', `Downloaded QR code for asset: ${asset.namaKomputer}`, assetId);
+            showToast('QR code berjaya dimuat turun', 'success');
+        }
+
+        async function printQRCode(assetId) {
+            const qrDiv = document.getElementById('qrCanvas_' + assetId);
+            if (!qrDiv) return;
+
+            const canvas = qrDiv.querySelector('canvas');
+            if (!canvas) {
+                showToast('QR code tidak dijumpai', 'error');
+                return;
+            }
+
+            const asset = currentAssets.find(a => a.id === assetId);
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print QR Code - ${asset.namaKomputer}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            padding: 20px;
+                        }
+                        h2 { margin-bottom: 20px; }
+                        img { margin: 20px 0; }
+                        .info { text-align: left; max-width: 400px; margin: 0 auto; }
+                        .info p { margin: 8px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h2>${asset.namaKomputer}</h2>
+                    <img src="${canvas.toDataURL()}" />
+                    <div class="info">
+                        <p><strong>DHM:</strong> ${asset.daftarHarta || 'N/A'}</p>
+                        <p><strong>Model:</strong> ${asset.jenamModel || 'N/A'}</p>
+                        <p><strong>Casis:</strong> ${asset.noCasis || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${asset.status || 'N/A'}</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+
+            await logActivity('PRINT_QR', `Printed QR code for asset: ${asset.namaKomputer}`, assetId);
+        }
+
+        // === EXPORT FUNCTIONS ===
+        async function exportToExcel() {
+            if (currentAssets.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentAssets.map(asset => ({
+                'Nama Komputer': asset.namaKomputer || '',
+                'Jenama/Model': asset.jenamModel || '',
+                'No. Casis': asset.noCasis || '',
+                'Daftar Harta': asset.daftarHarta || '',
+                'Harga (RM)': asset.harga || 0,
+                'Lokasi': asset.lokasi || '',
+                'Pengguna': asset.pengguna || '',
+                'Sekolah': getSchoolName(asset.schoolId) || '',
+                'Sumber': asset.sumber || '',
+                'Tahun Peroleh': asset.tahunPeroleh || '',
+                'Status': asset.status || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Aset ICT');
+
+            const filename = `Aset_ICT_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_EXCEL', `Exported ${currentAssets.length} assets to Excel`);
+            showToast('Data berjaya di-export ke Excel!', 'success');
+        }
+
+        async function exportToPDF() {
+            if (currentAssets.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+
+            doc.setFontSize(18);
+            doc.text('Laporan Aset ICT', 14, 20);
+            
+            doc.setFontSize(10);
+            doc.text(`Tarikh: ${new Date().toLocaleDateString('ms-MY')}`, 14, 28);
+            doc.text(`Jumlah Aset: ${currentAssets.length}`, 14, 34);
+
+            const tableData = currentAssets.map(asset => [
+                asset.namaKomputer || '',
+                asset.jenamModel || '',
+                asset.noCasis || '',
+                asset.daftarHarta || '',
+                asset.lokasi || '',
+                asset.status || ''
+            ]);
+
+            doc.autoTable({
+                head: [['Nama Komputer', 'Model', 'No. Casis', 'DHM', 'Lokasi', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [59, 130, 246] }
+            });
+
+            const filename = `Laporan_Aset_ICT_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(filename);
+
+            await logActivity('EXPORT_PDF', `Exported ${currentAssets.length} assets to PDF`);
+            showToast('Laporan PDF berjaya dijana!', 'success');
+        }
+
+        // === IMPORT FUNCTIONS ===
+        function showImportModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Import Data Aset</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">Pilih Fail Excel (.xlsx)</label>
+                            <input type="file" id="importFile" class="form-control" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+                            <p style="margin-top: 8px; font-size: 13px; color: #64748b;">
+                                Format: Nama Komputer, Jenama/Model, No. Casis, Daftar Harta, Harga, Lokasi, Pengguna, Sekolah, Sumber, Tahun Peroleh, Status
+                            </p>
+                        </div>
+                        <div id="importProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                            <p id="progressText" style="text-align: center; margin-top: 8px; font-size: 14px;"></p>
+                        </div>
+                        <div id="importResult" style="display: none; margin-top: 16px;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="downloadTemplate()">
+                            <span class="btn-icon">��</span>
+                            <span>Download Template</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        function downloadTemplate() {
+            const template = [{
+                'Nama Komputer': 'PC-001',
+                'Jenama/Model': 'Dell Optiplex 7090',
+                'No. Casis': 'CASIS001',
+                'Daftar Harta': 'DHM001',
+                'Harga (RM)': 3500,
+                'Lokasi': 'Bilik Komputer 1',
+                'Pengguna': 'Ahmad bin Ali',
+                'Sekolah': 'SMK Taman Desa',
+                'Sumber': 'Peruntukan Kerajaan',
+                'Tahun Peroleh': '2024',
+                'Status': 'BAIK'
+            }];
+
+            const ws = XLSX.utils.json_to_sheet(template);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Template');
+
+            XLSX.writeFile(wb, 'Template_Import_Aset.xlsx');
+            showToast('Template berjaya dimuat turun', 'success');
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const progressDiv = document.getElementById('importProgress');
+            const resultDiv = document.getElementById('importResult');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            progressDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    let successCount = 0;
+                    let errorCount = 0;
+                    const total = jsonData.length;
+
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        
+                        try {
+                            await collections.assets.add({
+                                namaKomputer: row['Nama Komputer'] || '',
+                                jenamModel: row['Jenama/Model'] || '',
+                                noCasis: row['No. Casis'] || '',
+                                daftarHarta: row['Daftar Harta'] || '',
+                                harga: parseFloat(row['Harga (RM)']) || 0,
+                                lokasi: row['Lokasi'] || '',
+                                pengguna: row['Pengguna'] || '',
+                                schoolId: row['Sekolah'] || '',
+                                sumber: row['Sumber'] || '',
+                                tahunPeroleh: row['Tahun Peroleh'] || '',
+                                status: row['Status'] || 'BAIK',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                createdBy: currentUser.uid
+                            });
+                            successCount++;
+                        } catch (error) {
+                            errorCount++;
+                            console.error('Error importing row:', error);
+                        }
+
+                        const progress = ((i + 1) / total) * 100;
+                        progressFill.style.width = progress + '%';
+                        progressText.textContent = `Memproses: ${i + 1} / ${total}`;
+                    }
+
+                    progressDiv.style.display = 'none';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <div style="padding: 16px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                            <p style="color: #166534; font-weight: 600; margin-bottom: 8px;">Import Selesai!</p>
+                            <p style="color: #166534;">✅ Berjaya: ${successCount}</p>
+                            <p style="color: #991b1b;">❌ Gagal: ${errorCount}</p>
+                        </div>
+                    `;
+
+                    await logActivity('IMPORT_ASSETS', `Imported ${successCount} assets from Excel`);
+                    showToast(`Import selesai! ${successCount} berjaya, ${errorCount} gagal`, 'success');
+
+                } catch (error) {
+                    progressDiv.style.display = 'none';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <div style="padding: 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
+                            <p style="color: #991b1b; font-weight: 600;">Ralat: ${error.message}</p>
+                        </div>
+                    `;
+                    showToast('Ralat import data', 'error');
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // === BULK OPERATIONS ===
+        function bulkEdit() {
+            if (selectedAssets.size === 0) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Terpilih (${selectedAssets.size} aset)</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="bulkEditForm">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" id="bulkStatus">
+                                    <option value="">-- Tidak Berubah --</option>
+                                    <option value="BAIK">BAIK</option>
+                                    <option value="LUPUS">LUPUS</option>
+                                    <option value="ROSAK">ROSAK</option>
+                                    <option value="HILANG">HILANG</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lokasi</label>
+                                <input type="text" class="form-control" id="bulkLokasi" placeholder="Kosongkan jika tidak berubah">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sekolah</label>
+                                <select class="form-control" id="bulkSchool">
+                                    <option value="">-- Tidak Berubah --</option>
+                                    ${currentSchools.map(school => 
+                                        `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('bulkEditForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const status = document.getElementById('bulkStatus').value;
+                const lokasi = document.getElementById('bulkLokasi').value;
+                const school = document.getElementById('bulkSchool').value;
+
+                const updates = {};
+                if (status) updates.status = status;
+                if (lokasi) updates.lokasi = lokasi;
+                if (school) updates.schoolId = school;
+
+                if (Object.keys(updates).length === 0) {
+                    showToast('Tiada perubahan dibuat', 'warning');
+                    return;
+                }
+
+                updates.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+                let successCount = 0;
+                for (const assetId of selectedAssets) {
+                    try {
+                        await collections.assets.doc(assetId).update(updates);
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error updating asset:', error);
+                    }
+                }
+
+                await logActivity('BULK_EDIT', `Bulk edited ${successCount} assets`);
+                showToast(`${successCount} aset berjaya dikemaskini`, 'success');
+                closeModal(modal.querySelector('.modal-close'));
+                selectedAssets.clear();
+                updateBulkButtons();
+            });
+        }
+
+        function bulkDelete() {
+            if (selectedAssets.size === 0) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Terpilih</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam <strong>${selectedAssets.size} aset</strong>?</p>
+                        <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="confirmBulkDelete()">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam Semua</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function confirmBulkDelete() {
+            let successCount = 0;
+            for (const assetId of selectedAssets) {
+                try {
+                    await collections.assets.doc(assetId).delete();
+                    successCount++;
+                } catch (error) {
+                    console.error('Error deleting asset:', error);
+                }
+            }
+
+            await logActivity('BULK_DELETE', `Bulk deleted ${successCount} assets`);
+            showToast(`${successCount} aset berjaya dipadam`, 'success');
+            
+            const modal = document.querySelector('.modal');
+            if (modal) modal.remove();
+            
+            selectedAssets.clear();
+            updateBulkButtons();
+        }
+
+        function bulkPrintLabels() {
+            if (selectedAssets.size === 0) return;
+
+            const printWindow = window.open('', '_blank');
+            let content = `
+                <html>
+                <head>
+                    <title>Print Asset Labels</title>
+                    <style>
+                        @page { size: 2.5in 1in; margin: 0; }
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0;
+                            padding: 0;
+                        }
+                        .label {
+                            width: 2.5in;
+                            height: 1in;
+                            padding: 0.1in;
+                            page-break-after: always;
+                            border: 1px solid #000;
+                            box-sizing: border-box;
+                        }
+                        .label h3 {
+                            margin: 0 0 4px 0;
+                            font-size: 11pt;
+                        }
+                        .label p {
+                            margin: 2px 0;
+                            font-size: 8pt;
+                        }
+                    </style>
+                </head>
+                <body>
+            `;
+
+            selectedAssets.forEach(assetId => {
+                const asset = currentAssets.find(a => a.id === assetId);
+                if (asset) {
+                    content += `
+                        <div class="label">
+                            <h3>${asset.namaKomputer || 'N/A'}</h3>
+                            <p><strong>DHM:</strong> ${asset.daftarHarta || 'N/A'}</p>
+                            <p><strong>Model:</strong> ${asset.jenamModel || 'N/A'}</p>
+                            <p><strong>Casis:</strong> ${asset.noCasis || 'N/A'}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            content += `
+                </body>
+                </html>
+            `;
+
+            printWindow.document.write(content);
+            printWindow.document.close();
+            printWindow.print();
+
+            logActivity('BULK_PRINT', `Printed labels for ${selectedAssets.size} assets`);
+            showToast(`Label untuk ${selectedAssets.size} aset berjaya dicetak`, 'success');
+        }
+
+        // === API KEYS MANAGEMENT ===
+        function renderApiKeys() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">API Keys Management</h1>
+                            <p class="page-subtitle">Urus API keys untuk akses sistem</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="showGenerateApiKeyModal()">
+                                <span class="btn-icon">🔑</span>
+                                <span>Generate API Key</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai API Keys</h3>
+                    </div>
+                    <div id="apiKeysList"></div>
+                </div>
+            `;
+
+            renderApiKeysTable();
+        }
+
+        function renderApiKeysTable() {
+            const container = document.getElementById('apiKeysList');
+            if (!container) return;
+
+            if (currentApiKeys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔑</div>
+                        <div class="empty-title">Tiada API Keys</div>
+                        <div class="empty-text">Klik "Generate API Key" untuk mencipta</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = currentApiKeys.map(key => `
+                <div class="api-key-item">
+                    <div class="api-key-header">
+                        <span class="api-key-name">${key.name}</span>
+                        <span class="badge ${key.status === 'active' ? 'badge-success' : 'badge-danger'}">
+                            ${key.status === 'active' ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <div class="api-key-value">${key.key}</div>
+                    <div class="api-key-meta">
+                        <span>📊 Usage: ${key.usageCount || 0}</span>
+                        <span>🕐 Last Used: ${key.lastUsed ? new Date(key.lastUsed.toDate()).toLocaleString('ms-MY') : 'Never'}</span>
+                        <span>🔐 Permissions: ${key.permissions.join(', ')}</span>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="copyApiKey('${key.key}')">
+                            <span class="btn-icon">📋</span>
+                            <span>Copy</span>
+                        </button>
+                        <button class="btn btn-warning" onclick="toggleApiKeyStatus('${key.id}', '${key.status}')">
+                            <span class="btn-icon">${key.status === 'active' ? '⏸️' : '▶️'}</span>
+                            <span>${key.status === 'active' ? 'Revoke' : 'Activate'}</span>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteApiKey('${key.id}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showGenerateApiKeyModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Generate API Key</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="generateApiKeyForm">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Nama API Key</label>
+                                <input type="text" class="form-control" id="apiKeyName" placeholder="Contoh: Mobile App API" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Permissions</label>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" value="read" checked> Read
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" value="write"> Write
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" value="delete"> Delete
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="btn-icon">🔑</span>
+                                <span>Generate</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('generateApiKeyForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('apiKeyName').value;
+                const checkboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+                const permissions = Array.from(checkboxes).map(cb => cb.value);
+
+                if (permissions.length === 0) {
+                    showToast('Sila pilih sekurang-kurangnya satu permission', 'warning');
+                    return;
+                }
+
+                // Generate random API key
+                const apiKey = 'sk_' + Array.from({length: 32}, () => 
+                    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 62)]
+                ).join('');
+
+                try {
+                    await collections.apiKeys.add({
+                        name: name,
+                        key: apiKey,
+                        permissions: permissions,
+                        status: 'active',
+                        usageCount: 0,
+                        lastUsed: null,
+                        createdBy: currentUser.uid,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await logAdminAction('GENERATE_API_KEY', `Generated API key: ${name}`);
+                    showToast('API key berjaya dijana!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menjana API key: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function copyApiKey(key) {
+            navigator.clipboard.writeText(key).then(() => {
+                showToast('API key berjaya disalin', 'success');
+            }).catch(() => {
+                showToast('Ralat menyalin API key', 'error');
+            });
+        }
+
+        async function toggleApiKeyStatus(keyId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            
+            try {
+                await collections.apiKeys.doc(keyId).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await logAdminAction('TOGGLE_API_KEY', `Changed API key status to: ${newStatus}`, keyId);
+                showToast(`API key ${newStatus === 'active' ? 'diaktifkan' : 'direvoke'}`, 'success');
+            } catch (error) {
+                showToast('Ralat mengubah status API key', 'error');
+            }
+        }
+
+        async function deleteApiKey(keyId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam API Key</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Adakah anda pasti mahu memadam API key ini?</p>
+                        <p style="color: #ef4444; font-size: 14px; margin-top: 12px;">⚠️ Aplikasi yang menggunakan key ini tidak akan dapat mengakses sistem!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="confirmDeleteApiKey('${keyId}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function confirmDeleteApiKey(keyId) {
+            try {
+                await collections.apiKeys.doc(keyId).delete();
+                await logAdminAction('DELETE_API_KEY', `Deleted API key`, keyId);
+                showToast('API key berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam API key', 'error');
+            }
+        }
+
+        // === ADD/EDIT ASSET MODALS ===
+        function showAddAssetModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Aset Baru</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addAssetForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addNamaKomputer">Nama Komputer *</label>
+                                    <input type="text" class="form-control" id="addNamaKomputer" placeholder="Contoh: PC-001" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addJenamModel">Jenama/Model *</label>
+                                    <input type="text" class="form-control" id="addJenamModel" placeholder="Contoh: Dell Optiplex 7090" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addNoCasis">No. Casis</label>
+                                    <input type="text" class="form-control" id="addNoCasis" placeholder="Contoh: CASIS001">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addDaftarHarta">Daftar Harta (DHM)</label>
+                                    <input type="text" class="form-control" id="addDaftarHarta" placeholder="Contoh: DHM001">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addHarga">Harga (RM)</label>
+                                    <input type="number" class="form-control" id="addHarga" placeholder="0.00" step="0.01" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addTahunPeroleh">Tahun Peroleh</label>
+                                    <input type="text" class="form-control" id="addTahunPeroleh" placeholder="2024">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addLokasi">Lokasi</label>
+                                    <input type="text" class="form-control" id="addLokasi" placeholder="Contoh: Bilik Komputer 1">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addPengguna">Pengguna</label>
+                                    <input type="text" class="form-control" id="addPengguna" placeholder="Nama pengguna">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addSchool">Sekolah *</label>
+                                    <select class="form-control" id="addSchool" required>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        ${currentSchools.map(school => 
+                                            `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addStatus">Status *</label>
+                                    <select class="form-control" id="addStatus" required>
+                                        <option value="BAIK">BAIK</option>
+                                        <option value="LUPUS">LUPUS</option>
+                                        <option value="ROSAK">ROSAK</option>
+                                        <option value="HILANG">HILANG</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addSumber">Sumber</label>
+                                    <input type="text" class="form-control" id="addSumber" placeholder="Contoh: Peruntukan Kerajaan">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addKategori">Kategori</label>
+                                    <input type="text" class="form-control" id="addKategori" placeholder="Contoh: Desktop">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addAssetBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Aset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('addAssetForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addAssetBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const assetData = {
+                    namaKomputer: document.getElementById('addNamaKomputer').value,
+                    jenamModel: document.getElementById('addJenamModel').value,
+                    noCasis: document.getElementById('addNoCasis').value,
+                    daftarHarta: document.getElementById('addDaftarHarta').value,
+                    harga: parseFloat(document.getElementById('addHarga').value) || 0,
+                    tahunPeroleh: document.getElementById('addTahunPeroleh').value,
+                    lokasi: document.getElementById('addLokasi').value,
+                    pengguna: document.getElementById('addPengguna').value,
+                    schoolId: document.getElementById('addSchool').value,
+                    status: document.getElementById('addStatus').value,
+                    sumber: document.getElementById('addSumber').value,
+                    kategori: document.getElementById('addKategori').value,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.uid
+                };
+
+                try {
+                    await collections.assets.add(assetData);
+                    await logActivity('ADD_ASSET', `Added new asset: ${assetData.namaKomputer}`);
+                    showToast('Aset berjaya ditambah!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menambah aset: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Aset</span>';
+                }
+            });
+        }
+
+        function showEditAssetModal(assetId) {
+            const asset = currentAssets.find(a => a.id === assetId);
+            if (!asset) {
+                showToast('Aset tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Aset - ${asset.namaKomputer}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="editAssetForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editNamaKomputer">Nama Komputer *</label>
+                                    <input type="text" class="form-control" id="editNamaKomputer" value="${asset.namaKomputer || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editJenamModel">Jenama/Model *</label>
+                                    <input type="text" class="form-control" id="editJenamModel" value="${asset.jenamModel || ''}" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editNoCasis">No. Casis</label>
+                                    <input type="text" class="form-control" id="editNoCasis" value="${asset.noCasis || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editDaftarHarta">Daftar Harta (DHM)</label>
+                                    <input type="text" class="form-control" id="editDaftarHarta" value="${asset.daftarHarta || ''}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editHarga">Harga (RM)</label>
+                                    <input type="number" class="form-control" id="editHarga" value="${asset.harga || 0}" step="0.01" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editTahunPeroleh">Tahun Peroleh</label>
+                                    <input type="text" class="form-control" id="editTahunPeroleh" value="${asset.tahunPeroleh || ''}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editLokasi">Lokasi</label>
+                                    <input type="text" class="form-control" id="editLokasi" value="${asset.lokasi || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editPengguna">Pengguna</label>
+                                    <input type="text" class="form-control" id="editPengguna" value="${asset.pengguna || ''}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editSchool">Sekolah *</label>
+                                    <select class="form-control" id="editSchool" required>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        ${currentSchools.map(school => 
+                                            `<option value="${school.id}" ${asset.schoolId === school.id ? 'selected' : ''}>${school.code} - ${school.name}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editStatus">Status *</label>
+                                    <select class="form-control" id="editStatus" required>
+                                        <option value="BAIK" ${asset.status === 'BAIK' ? 'selected' : ''}>BAIK</option>
+                                        <option value="LUPUS" ${asset.status === 'LUPUS' ? 'selected' : ''}>LUPUS</option>
+                                        <option value="ROSAK" ${asset.status === 'ROSAK' ? 'selected' : ''}>ROSAK</option>
+                                        <option value="HILANG" ${asset.status === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editSumber">Sumber</label>
+                                    <input type="text" class="form-control" id="editSumber" value="${asset.sumber || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editKategori">Kategori</label>
+                                    <input type="text" class="form-control" id="editKategori" value="${asset.kategori || ''}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="editAssetBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('editAssetForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('editAssetBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const updatedData = {
+                    namaKomputer: document.getElementById('editNamaKomputer').value,
+                    jenamModel: document.getElementById('editJenamModel').value,
+                    noCasis: document.getElementById('editNoCasis').value,
+                    daftarHarta: document.getElementById('editDaftarHarta').value,
+                    harga: parseFloat(document.getElementById('editHarga').value) || 0,
+                    tahunPeroleh: document.getElementById('editTahunPeroleh').value,
+                    lokasi: document.getElementById('editLokasi').value,
+                    pengguna: document.getElementById('editPengguna').value,
+                    schoolId: document.getElementById('editSchool').value,
+                    status: document.getElementById('editStatus').value,
+                    sumber: document.getElementById('editSumber').value,
+                    kategori: document.getElementById('editKategori').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    await collections.assets.doc(assetId).update(updatedData);
+                    await logActivity('EDIT_ASSET', `Updated asset: ${updatedData.namaKomputer}`, assetId);
+                    await logAudit('asset', assetId, 'UPDATE', asset, updatedData);
+                    showToast('Aset berjaya dikemaskini!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat mengemaskini aset: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                }
+            });
+        }
+
+        function confirmDeleteAsset(assetId) {
+            const asset = currentAssets.find(a => a.id === assetId);
+            if (!asset) {
+                showToast('Aset tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Aset</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam aset ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Nama:</strong> ${asset.namaKomputer || 'N/A'}</p>
+                            <p><strong>Model:</strong> ${asset.jenamModel || 'N/A'}</p>
+                            <p><strong>DHM:</strong> ${asset.daftarHarta || 'N/A'}</p>
+                        </div>
+                        <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="executeDeleteAsset('${assetId}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteAsset(assetId) {
+            const asset = currentAssets.find(a => a.id === assetId);
+            
+            try {
+                await collections.assets.doc(assetId).delete();
+                await logActivity('DELETE_ASSET', `Deleted asset: ${asset.namaKomputer}`, assetId);
+                await logAudit('asset', assetId, 'DELETE', asset, null);
+                showToast('Aset berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam aset: ' + error.message, 'error');
+            }
+        }
+
+        function renderBorrowing() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Pengurusan Pinjaman</h1>
+                            <p class="page-subtitle">Urus pinjaman aset ICT</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportBorrowingToExcel()">
+                                <span class="btn-icon">��</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddBorrowingModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Pinjaman</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="nav-tabs">
+                    <a class="nav-tab active" onclick="switchBorrowingTab('all', event)">
+                        <span class="nav-tab-icon">📋</span>
+                        <span>Semua</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchBorrowingTab('borrowed', event)">
+                        <span class="nav-tab-icon">📤</span>
+                        <span>Dipinjam</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchBorrowingTab('returned', event)">
+                        <span class="nav-tab-icon">✓</span>
+                        <span>Dikembalikan</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchBorrowingTab('overdue', event)">
+                        <span class="nav-tab-icon">⚠</span>
+                        <span>Lewat Tempoh</span>
+                    </a>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">📋</div>
+                        </div>
+                        <div class="stat-value" id="total-borrowings">0</div>
+                        <div class="stat-label">Jumlah Pinjaman</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">📤</div>
+                        </div>
+                        <div class="stat-value" id="active-borrowings">0</div>
+                        <div class="stat-label">Sedang Dipinjam</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">✓</div>
+                        </div>
+                        <div class="stat-value" id="returned-borrowings">0</div>
+                        <div class="stat-label">Dikembalikan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon red">⚠</div>
+                        </div>
+                        <div class="stat-value" id="overdue-borrowings">0</div>
+                        <div class="stat-label">Lewat Tempoh</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Pinjaman</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Cari peminjam, aset..." 
+                               onkeyup="handleBorrowingSearch(this.value)">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleBorrowingStatusFilter(this.value)" id="borrowingStatusFilter">
+                            <option value="">Semua Status</option>
+                            <option value="BORROWED">Dipinjam</option>
+                            <option value="RETURNED">Dikembalikan</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearBorrowingFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Peminjam</th>
+                                    <th>Aset</th>
+                                    <th>DHM</th>
+                                    <th>Tarikh Pinjam</th>
+                                    <th>Tarikh Jangka Pulang</th>
+                                    <th>Tarikh Pulang</th>
+                                    <th>Tujuan</th>
+                                    <th>Status</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="borrowings-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            updateBorrowingStats();
+            renderBorrowingTable();
+        }
+
+        function updateBorrowingStats() {
+            const total = currentBorrowing.length;
+            const borrowed = currentBorrowing.filter(b => b.status === 'BORROWED').length;
+            const returned = currentBorrowing.filter(b => b.status === 'RETURNED').length;
+            
+            // Calculate overdue
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const overdue = currentBorrowing.filter(b => {
+                if (b.status !== 'BORROWED') return false;
+                if (!b.expectedReturnDate) return false;
+                const returnDate = new Date(b.expectedReturnDate);
+                returnDate.setHours(0, 0, 0, 0);
+                return returnDate < today;
+            }).length;
+
+            const totalEl = document.getElementById('total-borrowings');
+            const activeEl = document.getElementById('active-borrowings');
+            const returnedEl = document.getElementById('returned-borrowings');
+            const overdueEl = document.getElementById('overdue-borrowings');
+
+            if (totalEl) totalEl.textContent = total;
+            if (activeEl) activeEl.textContent = borrowed;
+            if (returnedEl) returnedEl.textContent = returned;
+            if (overdueEl) overdueEl.textContent = overdue;
+        }
+
+        let borrowingFilters = {
+            search: '',
+            status: ''
+        };
+
+        function handleBorrowingSearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                borrowingFilters.search = value;
+                renderBorrowingTable();
+            }, 300);
+        }
+
+        function handleBorrowingStatusFilter(value) {
+            borrowingFilters.status = value;
+            renderBorrowingTable();
+        }
+
+        function clearBorrowingFilters() {
+            borrowingFilters = {
+                search: '',
+                status: ''
+            };
+            document.querySelector('.search-input').value = '';
+            document.getElementById('borrowingStatusFilter').value = '';
+            renderBorrowingTable();
+        }
+
+        function switchBorrowingTab(tab, event) {
+            // Update active tab
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.nav-tab').classList.add('active');
+
+            // Reset filters
+            borrowingFilters = {
+                search: '',
+                status: ''
+            };
+
+            switch(tab) {
+                case 'all':
+                    // Show all
+                    break;
+                case 'borrowed':
+                    borrowingFilters.status = 'BORROWED';
+                    break;
+                case 'returned':
+                    borrowingFilters.status = 'RETURNED';
+                    break;
+                case 'overdue':
+                    borrowingFilters.status = 'OVERDUE';
+                    break;
+            }
+
+            document.getElementById('borrowingStatusFilter').value = borrowingFilters.status === 'OVERDUE' ? '' : borrowingFilters.status;
+            renderBorrowingTable();
+        }
+
+        function renderBorrowingTable() {
+            const tbody = document.getElementById('borrowings-tbody');
+            if (!tbody) return;
+
+            let filtered = [...currentBorrowing];
+
+            // Apply search filter
+            if (borrowingFilters.search) {
+                const search = borrowingFilters.search.toLowerCase();
+                filtered = filtered.filter(b => 
+                    (b.borrowerName || '').toLowerCase().includes(search) ||
+                    (b.borrowerEmail || '').toLowerCase().includes(search) ||
+                    (b.assetName || '').toLowerCase().includes(search) ||
+                    (b.daftarHarta || '').toLowerCase().includes(search) ||
+                    (b.purpose || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply status filter
+            if (borrowingFilters.status) {
+                if (borrowingFilters.status === 'OVERDUE') {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    filtered = filtered.filter(b => {
+                        if (b.status !== 'BORROWED') return false;
+                        if (!b.expectedReturnDate) return false;
+                        const returnDate = new Date(b.expectedReturnDate);
+                        returnDate.setHours(0, 0, 0, 0);
+                        return returnDate < today;
+                    });
+                } else {
+                    filtered = filtered.filter(b => b.status === borrowingFilters.status);
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-icon">📋</div>
+                                <div class="empty-title">Tiada Rekod Pinjaman</div>
+                                <div class="empty-text">Klik "Tambah Pinjaman" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by borrow date (newest first)
+            filtered.sort((a, b) => {
+                const dateA = a.borrowDate ? new Date(a.borrowDate) : new Date(0);
+                const dateB = b.borrowDate ? new Date(b.borrowDate) : new Date(0);
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = filtered.map(borrowing => {
+                const isOverdue = checkIfOverdue(borrowing);
+                return `
+                    <tr>
+                        <td>
+                            <strong>${borrowing.borrowerName || 'N/A'}</strong><br>
+                            <small style="color: #64748b;">${borrowing.borrowerEmail || ''}</small><br>
+                            <small style="color: #64748b;">📞 ${borrowing.borrowerPhone || 'N/A'}</small>
+                        </td>
+                        <td><strong>${borrowing.assetName || 'N/A'}</strong></td>
+                        <td>${borrowing.daftarHarta || 'N/A'}</td>
+                        <td>${formatDate(borrowing.borrowDate)}</td>
+                        <td>${formatDate(borrowing.expectedReturnDate)}</td>
+                        <td>${borrowing.actualReturnDate ? formatDate(borrowing.actualReturnDate) : '-'}</td>
+                        <td>${borrowing.purpose || '-'}</td>
+                        <td>${getBorrowingStatusBadge(borrowing.status, isOverdue)}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="action-btn action-btn-view" onclick="showBorrowingDetails('${borrowing.id}')" title="Lihat">
+                                    ����️
+                                </button>
+                                ${borrowing.status === 'BORROWED' ? `
+                                    <button class="action-btn action-btn-edit" onclick="showReturnBorrowingModal('${borrowing.id}')" title="Pulangkan">
+                                        ���
+                                    </button>
+                                ` : ''}
+                                <button class="action-btn action-btn-delete" onclick="confirmDeleteBorrowing('${borrowing.id}')" title="Padam">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function checkIfOverdue(borrowing) {
+            if (borrowing.status !== 'BORROWED') return false;
+            if (!borrowing.expectedReturnDate) return false;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const returnDate = new Date(borrowing.expectedReturnDate);
+            returnDate.setHours(0, 0, 0, 0);
+            
+            return returnDate < today;
+        }
+
+        function getBorrowingStatusBadge(status, isOverdue) {
+            if (isOverdue) {
+                return `<span class="badge badge-danger">
+                    <span class="badge-dot"></span>
+                    LEWAT TEMPOH
+                </span>`;
+            }
+            
+            const statusMap = {
+                'BORROWED': { text: 'DIPINJAM', class: 'badge-warning' },
+                'RETURNED': { text: 'DIKEMBALIKAN', class: 'badge-success' }
+            };
+            
+            const statusInfo = statusMap[status] || { text: status, class: 'badge-info' };
+            return `<span class="badge ${statusInfo.class}">
+                <span class="badge-dot"></span>
+                ${statusInfo.text}
+            </span>`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ms-MY', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function showAddBorrowingModal() {
+            // Get available assets (not currently borrowed)
+            const borrowedAssetIds = currentBorrowing
+                .filter(b => b.status === 'BORROWED')
+                .map(b => b.assetId);
+            
+            const availableAssets = currentAssets.filter(asset => 
+                !borrowedAssetIds.includes(asset.id) && 
+                (asset.status === 'BAIK' || asset.status === 'LUPUS')
+            );
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Pinjaman Baru</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addBorrowingForm">
+                        <div class="modal-body">
+                            <h4 style="margin-bottom: 16px; color: #0f172a;">Maklumat Peminjam</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="borrowerName">Nama Peminjam *</label>
+                                    <input type="text" class="form-control" id="borrowerName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="borrowerIC">No. IC/Passport *</label>
+                                    <input type="text" class="form-control" id="borrowerIC" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="borrowerEmail">Email *</label>
+                                    <input type="email" class="form-control" id="borrowerEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="borrowerPhone">No. Telefon *</label>
+                                    <input type="tel" class="form-control" id="borrowerPhone" required>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 24px 0 16px; color: #0f172a;">Maklumat Pinjaman</h4>
+                            <div class="form-group">
+                                <label class="form-label" for="borrowAsset">Aset *</label>
+                                <select class="form-control" id="borrowAsset" required onchange="updateAssetInfo(this.value)">
+                                    <option value="">-- Pilih Aset --</option>
+                                    ${availableAssets.map(asset => 
+                                        `<option value="${asset.id}" data-dhm="${asset.daftarHarta || ''}">${asset.namaKomputer} - ${asset.jenamModel} (${asset.daftarHarta || 'No DHM'})</option>`
+                                    ).join('')}
+                                </select>
+                                ${availableAssets.length === 0 ? '<p style="color: #ef4444; font-size: 13px; margin-top: 8px;">⚠️ Tiada aset tersedia untuk dipinjam</p>' : ''}
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="borrowDate">Tarikh Pinjam *</label>
+                                    <input type="date" class="form-control" id="borrowDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="expectedReturnDate">Tarikh Jangka Pulang *</label>
+                                    <input type="date" class="form-control" id="expectedReturnDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="borrowPurpose">Tujuan Pinjaman *</label>
+                                <textarea class="form-control" id="borrowPurpose" rows="3" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="borrowNotes">Nota Tambahan</label>
+                                <textarea class="form-control" id="borrowNotes" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addBorrowingBtn" ${availableAssets.length === 0 ? 'disabled' : ''}>
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Pinjaman</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('borrowDate').value = today;
+
+            document.getElementById('addBorrowingForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addBorrowingBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const assetId = document.getElementById('borrowAsset').value;
+                const asset = currentAssets.find(a => a.id === assetId);
+
+                const borrowingData = {
+                    borrowerName: document.getElementById('borrowerName').value,
+                    borrowerIC: document.getElementById('borrowerIC').value,
+                    borrowerEmail: document.getElementById('borrowerEmail').value,
+                    borrowerPhone: document.getElementById('borrowerPhone').value,
+                    assetId: assetId,
+                    assetName: asset ? asset.namaKomputer : '',
+                    daftarHarta: asset ? asset.daftarHarta : '',
+                    borrowDate: document.getElementById('borrowDate').value,
+                    expectedReturnDate: document.getElementById('expectedReturnDate').value,
+                    purpose: document.getElementById('borrowPurpose').value,
+                    notes: document.getElementById('borrowNotes').value,
+                    status: 'BORROWED',
+                    approvedBy: currentUser.uid,
+                    approvedByEmail: currentUser.email,
+                    actualReturnDate: null,
+                    returnedAt: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    await collections.borrowings.add(borrowingData);
+                    await logActivity('ADD_BORROWING', `Added borrowing: ${borrowingData.assetName} to ${borrowingData.borrowerName}`);
+                    showToast('Pinjaman berjaya ditambah!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menambah pinjaman: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Pinjaman</span>';
+                }
+            });
+        }
+
+        function updateAssetInfo(assetId) {
+            // This function can be used to display additional asset info when selected
+            // Currently just a placeholder for future enhancements
+        }
+
+        function showBorrowingDetails(borrowingId) {
+            const borrowing = currentBorrowing.find(b => b.id === borrowingId);
+            if (!borrowing) {
+                showToast('Pinjaman tidak dijumpai', 'error');
+                return;
+            }
+
+            const isOverdue = checkIfOverdue(borrowing);
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Pinjaman</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <h4 style="margin-bottom: 16px; color: #0f172a;">Maklumat Peminjam</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nama Peminjam</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.borrowerName || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">No. IC/Passport</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.borrowerIC || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.borrowerEmail || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">No. Telefon</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.borrowerPhone || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Maklumat Pinjaman</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Aset</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.assetName || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daftar Harta (DHM)</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.daftarHarta || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tarikh Pinjam</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${formatDate(borrowing.borrowDate)}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tarikh Jangka Pulang</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${formatDate(borrowing.expectedReturnDate)}</p>
+                            </div>
+                        </div>
+                        ${borrowing.actualReturnDate ? `
+                        <div class="form-group">
+                            <label class="form-label">Tarikh Pulang Sebenar</label>
+                            <p style="padding: 10px; background: #f0fdf4; border-radius: 6px; color: #166534;">${formatDate(borrowing.actualReturnDate)}</p>
+                        </div>
+                        ` : ''}
+                        <div class="form-group">
+                            <label class="form-label">Tujuan</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.purpose || 'N/A'}</p>
+                        </div>
+                        ${borrowing.notes ? `
+                        <div class="form-group">
+                            <label class="form-label">Nota</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.notes}</p>
+                        </div>
+                        ` : ''}
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getBorrowingStatusBadge(borrowing.status, isOverdue)}</p>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Maklumat Kelulusan</h4>
+                        <div class="form-group">
+                            <label class="form-label">Diluluskan Oleh</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${borrowing.approvedByEmail || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        ${borrowing.status === 'BORROWED' ? `
+                            <button class="btn btn-success" onclick="closeModal(this); showReturnBorrowingModal('${borrowingId}')">
+                                <span class="btn-icon">✓</span>
+                                <span>Pulangkan Aset</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            logActivity('VIEW_BORROWING', `Viewed borrowing details: ${borrowing.assetName}`, borrowingId);
+        }
+
+        function showReturnBorrowingModal(borrowingId) {
+            const borrowing = currentBorrowing.find(b => b.id === borrowingId);
+            if (!borrowing) {
+                showToast('Pinjaman tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Pulangkan Aset</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="returnBorrowingForm">
+                        <div class="modal-body">
+                            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                                <p><strong>Peminjam:</strong> ${borrowing.borrowerName}</p>
+                                <p><strong>Aset:</strong> ${borrowing.assetName}</p>
+                                <p><strong>DHM:</strong> ${borrowing.daftarHarta || 'N/A'}</p>
+                                <p><strong>Tarikh Pinjam:</strong> ${formatDate(borrowing.borrowDate)}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="returnDate">Tarikh Pulang *</label>
+                                <input type="date" class="form-control" id="returnDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="returnNotes">Nota Pemulangan</label>
+                                <textarea class="form-control" id="returnNotes" rows="3" placeholder="Contoh: Aset dalam keadaan baik"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-success" id="returnBorrowingBtn">
+                                <span class="btn-icon">✓</span>
+                                <span>Sahkan Pemulangan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Set default return date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('returnDate').value = today;
+
+            document.getElementById('returnBorrowingForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('returnBorrowingBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Memproses...</span>';
+
+                const returnDate = document.getElementById('returnDate').value;
+                const returnNotes = document.getElementById('returnNotes').value;
+
+                try {
+                    await collections.borrowings.doc(borrowingId).update({
+                        status: 'RETURNED',
+                        actualReturnDate: returnDate,
+                        returnedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        notes: returnNotes || borrowing.notes,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await logActivity('RETURN_BORROWING', `Returned asset: ${borrowing.assetName} from ${borrowing.borrowerName}`, borrowingId);
+                    showToast('Aset berjaya dipulangkan!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat memulangkan aset: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">✓</span> <span>Sahkan Pemulangan</span>';
+                }
+            });
+        }
+
+        function confirmDeleteBorrowing(borrowingId) {
+            const borrowing = currentBorrowing.find(b => b.id === borrowingId);
+            if (!borrowing) {
+                showToast('Pinjaman tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Rekod Pinjaman</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam rekod pinjaman ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Peminjam:</strong> ${borrowing.borrowerName}</p>
+                            <p><strong>Aset:</strong> ${borrowing.assetName}</p>
+                            <p><strong>Tarikh:</strong> ${formatDate(borrowing.borrowDate)}</p>
+                        </div>
+                        <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="executeDeleteBorrowing('${borrowingId}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteBorrowing(borrowingId) {
+            const borrowing = currentBorrowing.find(b => b.id === borrowingId);
+            
+            try {
+                await collections.borrowings.doc(borrowingId).delete();
+                await logActivity('DELETE_BORROWING', `Deleted borrowing: ${borrowing.assetName}`, borrowingId);
+                showToast('Rekod pinjaman berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam rekod: ' + error.message, 'error');
+            }
+        }
+
+        async function exportBorrowingToExcel() {
+            if (currentBorrowing.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentBorrowing.map(borrowing => ({
+                'Peminjam': borrowing.borrowerName || '',
+                'No. IC': borrowing.borrowerIC || '',
+                'Email': borrowing.borrowerEmail || '',
+                'Telefon': borrowing.borrowerPhone || '',
+                'Aset': borrowing.assetName || '',
+                'DHM': borrowing.daftarHarta || '',
+                'Tarikh Pinjam': borrowing.borrowDate || '',
+                'Tarikh Jangka Pulang': borrowing.expectedReturnDate || '',
+                'Tarikh Pulang': borrowing.actualReturnDate || '',
+                'Tujuan': borrowing.purpose || '',
+                'Status': borrowing.status || '',
+                'Diluluskan Oleh': borrowing.approvedByEmail || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Pinjaman');
+
+            const filename = `Pinjaman_Aset_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_BORROWING', `Exported ${currentBorrowing.length} borrowing records to Excel`);
+            showToast('Data pinjaman berjaya di-export!', 'success');
+        }
+
+        function renderTransferHistory() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Sejarah Transfer</h1>
+                            <p class="page-subtitle">Lihat sejarah pemindahan aset antara lokasi</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportTransfersToExcel()">
+                                <span class="btn-icon">����</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddTransferModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Transfer</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">🔄</div>
+                        </div>
+                        <div class="stat-value" id="total-transfers">0</div>
+                        <div class="stat-label">Jumlah Transfer</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">📅</div>
+                        </div>
+                        <div class="stat-value" id="transfers-this-month">0</div>
+                        <div class="stat-label">Bulan Ini</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">🏫</div>
+                        </div>
+                        <div class="stat-value" id="schools-involved">0</div>
+                        <div class="stat-label">Sekolah Terlibat</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">📦</div>
+                        </div>
+                        <div class="stat-value" id="assets-transferred">0</div>
+                        <div class="stat-label">Aset Dipindahkan</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Transfer</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Cari aset, lokasi, DHM..." 
+                               onkeyup="handleTransferSearch(this.value)">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleTransferSchoolFilter(this.value)" id="transferSchoolFilter">
+                            <option value="">Semua Sekolah</option>
+                            ${currentSchools.map(school => 
+                                `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                            ).join('')}
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearTransferFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tarikh</th>
+                                    <th>Aset</th>
+                                    <th>DHM</th>
+                                    <th>Dari</th>
+                                    <th>Ke</th>
+                                    <th>Sebab</th>
+                                    <th>Dipindahkan Oleh</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfers-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            updateTransferStats();
+            renderTransfersTable();
+        }
+
+        function updateTransferStats() {
+            const total = currentTransfers.length;
+            
+            // Calculate this month's transfers
+            const now = new Date();
+            const thisMonth = currentTransfers.filter(t => {
+                if (!t.timestamp) return false;
+                const transferDate = t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.timestamp);
+                return transferDate.getMonth() === now.getMonth() && 
+                       transferDate.getFullYear() === now.getFullYear();
+            }).length;
+
+            // Calculate unique schools involved
+            const schoolsSet = new Set();
+            currentTransfers.forEach(t => {
+                if (t.fromSchoolId) schoolsSet.add(t.fromSchoolId);
+                if (t.toSchoolId) schoolsSet.add(t.toSchoolId);
+            });
+
+            // Calculate unique assets transferred
+            const assetsSet = new Set();
+            currentTransfers.forEach(t => {
+                if (t.assetId) assetsSet.add(t.assetId);
+            });
+
+            const totalEl = document.getElementById('total-transfers');
+            const monthEl = document.getElementById('transfers-this-month');
+            const schoolsEl = document.getElementById('schools-involved');
+            const assetsEl = document.getElementById('assets-transferred');
+
+            if (totalEl) totalEl.textContent = total;
+            if (monthEl) monthEl.textContent = thisMonth;
+            if (schoolsEl) schoolsEl.textContent = schoolsSet.size;
+            if (assetsEl) assetsEl.textContent = assetsSet.size;
+        }
+
+        let transferFilters = {
+            search: '',
+            school: ''
+        };
+
+        function handleTransferSearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                transferFilters.search = value;
+                renderTransfersTable();
+            }, 300);
+        }
+
+        function handleTransferSchoolFilter(value) {
+            transferFilters.school = value;
+            renderTransfersTable();
+        }
+
+        function clearTransferFilters() {
+            transferFilters = {
+                search: '',
+                school: ''
+            };
+            document.querySelector('.search-input').value = '';
+            document.getElementById('transferSchoolFilter').value = '';
+            renderTransfersTable();
+        }
+
+        function renderTransfersTable() {
+            const tbody = document.getElementById('transfers-tbody');
+            if (!tbody) return;
+
+            let filtered = [...currentTransfers];
+
+            // Apply search filter
+            if (transferFilters.search) {
+                const search = transferFilters.search.toLowerCase();
+                filtered = filtered.filter(t => 
+                    (t.assetName || '').toLowerCase().includes(search) ||
+                    (t.daftarHarta || '').toLowerCase().includes(search) ||
+                    (t.fromLocation || '').toLowerCase().includes(search) ||
+                    (t.toLocation || '').toLowerCase().includes(search) ||
+                    (t.reason || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply school filter
+            if (transferFilters.school) {
+                filtered = filtered.filter(t => 
+                    t.fromSchoolId === transferFilters.school || 
+                    t.toSchoolId === transferFilters.school
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-icon">🔄</div>
+                                <div class="empty-title">Tiada Rekod Transfer</div>
+                                <div class="empty-text">Klik "Tambah Transfer" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by timestamp (newest first)
+            filtered.sort((a, b) => {
+                const dateA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+                const dateB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = filtered.map(transfer => `
+                <tr>
+                    <td>${formatTimestamp(transfer.timestamp)}</td>
+                    <td><strong>${transfer.assetName || 'N/A'}</strong></td>
+                    <td>${transfer.daftarHarta || 'N/A'}</td>
+                    <td>
+                        <strong>${transfer.fromLocation || 'N/A'}</strong><br>
+                        <small style="color: #64748b;">${getSchoolName(transfer.fromSchoolId) || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <strong>${transfer.toLocation || 'N/A'}</strong><br>
+                        <small style="color: #64748b;">${getSchoolName(transfer.toSchoolId) || 'N/A'}</small>
+                    </td>
+                    <td>${transfer.reason || '-'}</td>
+                    <td>
+                        <small style="color: #64748b;">${transfer.transferredByEmail || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="action-btn action-btn-view" onclick="showTransferDetails('${transfer.id}')" title="Lihat">
+                                👁️
+                            </button>
+                            <button class="action-btn action-btn-delete" onclick="confirmDeleteTransfer('${transfer.id}')" title="Padam">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleDateString('ms-MY', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showAddTransferModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Transfer Aset</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addTransferForm">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label" for="transferAssetSearch">Cari Aset *</label>
+                                <div style="position: relative;">
+                                    <input type="text" class="form-control" id="transferAssetSearch" 
+                                           placeholder="Cari mengikut nama, DHM, model, casis..." 
+                                           autocomplete="off"
+                                           oninput="filterTransferAssets(this.value)"
+                                           onfocus="showTransferAssetList()"
+                                           required>
+                                    <input type="hidden" id="transferAssetId" required>
+                                    <div id="transferAssetList" style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); z-index: 1000;">
+                                    </div>
+                                </div>
+                                <div id="selectedAssetInfo" style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; display: none;">
+                                    <p style="margin: 0; color: #166534; font-size: 14px;">
+                                        <strong>Terpilih:</strong> <span id="selectedAssetDisplay"></span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 24px 0 16px; color: #0f172a;">Lokasi Asal</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="fromLocation">Lokasi Dari *</label>
+                                    <input type="text" class="form-control" id="fromLocation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="fromSchool">Sekolah Dari *</label>
+                                    <select class="form-control" id="fromSchool" required>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        ${currentSchools.map(school => 
+                                            `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 24px 0 16px; color: #0f172a;">Lokasi Baru</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="toLocation">Lokasi Ke *</label>
+                                    <input type="text" class="form-control" id="toLocation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="toSchool">Sekolah Ke *</label>
+                                    <select class="form-control" id="toSchool" required>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        ${currentSchools.map(school => 
+                                            `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="transferReason">Sebab Transfer *</label>
+                                <textarea class="form-control" id="transferReason" rows="3" required placeholder="Contoh: Keperluan sekolah, pertukaran lokasi, dll"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addTransferBtn">
+                                <span class="btn-icon">��</span>
+                                <span>Simpan Transfer</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Setup asset search functionality
+            let transferAssetTimeout;
+            window.filterTransferAssets = function(searchValue) {
+                clearTimeout(transferAssetTimeout);
+                transferAssetTimeout = setTimeout(() => {
+                    const listDiv = document.getElementById('transferAssetList');
+                    if (!searchValue || searchValue.length < 2) {
+                        listDiv.style.display = 'none';
+                        return;
+                    }
+
+                    const search = searchValue.toLowerCase();
+                    const filtered = currentAssets.filter(asset => 
+                        (asset.namaKomputer || '').toLowerCase().includes(search) ||
+                        (asset.daftarHarta || '').toLowerCase().includes(search) ||
+                        (asset.jenamModel || '').toLowerCase().includes(search) ||
+                        (asset.noCasis || '').toLowerCase().includes(search)
+                    );
+
+                    if (filtered.length === 0) {
+                        listDiv.innerHTML = '<div style="padding: 12px; color: #64748b; text-align: center;">Tiada aset dijumpai</div>';
+                        listDiv.style.display = 'block';
+                        return;
+                    }
+
+                    listDiv.innerHTML = filtered.slice(0, 20).map(asset => `
+                        <div onclick="selectTransferAsset('${asset.id}', '${(asset.namaKomputer || '').replace(/'/g, "\\'")}', '${(asset.daftarHarta || '').replace(/'/g, "\\'")}', '${(asset.lokasi || '').replace(/'/g, "\\'")}', '${asset.schoolId || ''}')" 
+                             style="padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
+                             onmouseover="this.style.background='#f8fafc'" 
+                             onmouseout="this.style.background='white'">
+                            <div style="font-weight: 600; color: #0f172a; margin-bottom: 4px;">${asset.namaKomputer || 'N/A'}</div>
+                            <div style="font-size: 13px; color: #64748b;">
+                                <span>📋 DHM: ${asset.daftarHarta || 'N/A'}</span> • 
+                                <span>Model: ${asset.jenamModel || 'N/A'}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                                📍 ${asset.lokasi || 'N/A'} ���� ${getSchoolName(asset.schoolId) || 'N/A'}
+                            </div>
+                        </div>
+                    `).join('');
+                    listDiv.style.display = 'block';
+                }, 300);
+            };
+
+            window.showTransferAssetList = function() {
+                const searchValue = document.getElementById('transferAssetSearch').value;
+                if (searchValue && searchValue.length >= 2) {
+                    filterTransferAssets(searchValue);
+                }
+            };
+
+            window.selectTransferAsset = function(id, name, dhm, location, schoolId) {
+                document.getElementById('transferAssetId').value = id;
+                document.getElementById('transferAssetSearch').value = `${name} - ${dhm}`;
+                document.getElementById('transferAssetList').style.display = 'none';
+                
+                // Show selected asset info
+                const infoDiv = document.getElementById('selectedAssetInfo');
+                const displaySpan = document.getElementById('selectedAssetDisplay');
+                displaySpan.textContent = `${name} (DHM: ${dhm})`;
+                infoDiv.style.display = 'block';
+
+                // Auto-fill current location and school
+                document.getElementById('fromLocation').value = location || '';
+                document.getElementById('fromSchool').value = schoolId || '';
+            };
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                const searchInput = document.getElementById('transferAssetSearch');
+                const listDiv = document.getElementById('transferAssetList');
+                if (searchInput && listDiv && !searchInput.contains(e.target) && !listDiv.contains(e.target)) {
+                    listDiv.style.display = 'none';
+                }
+            });
+
+            document.getElementById('addTransferForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addTransferBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const assetId = document.getElementById('transferAssetId').value;
+                const asset = currentAssets.find(a => a.id === assetId);
+
+                const transferData = {
+                    assetId: assetId,
+                    assetName: asset ? asset.namaKomputer : '',
+                    daftarHarta: asset ? asset.daftarHarta : '',
+                    fromLocation: document.getElementById('fromLocation').value,
+                    fromSchoolId: document.getElementById('fromSchool').value,
+                    toLocation: document.getElementById('toLocation').value,
+                    toSchoolId: document.getElementById('toSchool').value,
+                    reason: document.getElementById('transferReason').value,
+                    transferredBy: currentUser.uid,
+                    transferredByEmail: currentUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    // Add transfer record
+                    await collections.transfers.add(transferData);
+
+                    // Update asset location and school
+                    await collections.assets.doc(assetId).update({
+                        lokasi: transferData.toLocation,
+                        schoolId: transferData.toSchoolId,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await logActivity('ADD_TRANSFER', `Transferred asset: ${transferData.assetName} from ${transferData.fromLocation} to ${transferData.toLocation}`);
+                    showToast('Transfer aset berjaya direkodkan!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat merekod transfer: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">���</span> <span>Simpan Transfer</span>';
+                }
+            });
+        }
+
+
+
+        function showTransferDetails(transferId) {
+            const transfer = currentTransfers.find(t => t.id === transferId);
+            if (!transfer) {
+                showToast('Transfer tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Transfer</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <h4 style="margin-bottom: 16px; color: #0f172a;">Maklumat Aset</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nama Aset</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${transfer.assetName || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daftar Harta (DHM)</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${transfer.daftarHarta || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Lokasi Asal</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Lokasi</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${transfer.fromLocation || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sekolah</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getSchoolName(transfer.fromSchoolId) || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Lokasi Baru</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Lokasi</label>
+                                <p style="padding: 10px; background: #f0fdf4; border-radius: 6px; color: #166534;">${transfer.toLocation || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sekolah</label>
+                                <p style="padding: 10px; background: #f0fdf4; border-radius: 6px; color: #166534;">${getSchoolName(transfer.toSchoolId) || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Sebab Transfer</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${transfer.reason || 'N/A'}</p>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Maklumat Transfer</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tarikh & Masa</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${formatTimestamp(transfer.timestamp)}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dipindahkan Oleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${transfer.transferredByEmail || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            logActivity('VIEW_TRANSFER', `Viewed transfer details: ${transfer.assetName}`, transferId);
+        }
+
+        function confirmDeleteTransfer(transferId) {
+            const transfer = currentTransfers.find(t => t.id === transferId);
+            if (!transfer) {
+                showToast('Transfer tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Rekod Transfer</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam rekod transfer ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Aset:</strong> ${transfer.assetName}</p>
+                            <p><strong>Dari:</strong> ${transfer.fromLocation}</p>
+                            <p><strong>Ke:</strong> ${transfer.toLocation}</p>
+                            <p><strong>Tarikh:</strong> ${formatTimestamp(transfer.timestamp)}</p>
+                        </div>
+                        <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="executeDeleteTransfer('${transferId}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteTransfer(transferId) {
+            const transfer = currentTransfers.find(t => t.id === transferId);
+            
+            try {
+                await collections.transfers.doc(transferId).delete();
+                await logActivity('DELETE_TRANSFER', `Deleted transfer: ${transfer.assetName}`, transferId);
+                showToast('Rekod transfer berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam rekod: ' + error.message, 'error');
+            }
+        }
+
+        async function exportTransfersToExcel() {
+            if (currentTransfers.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentTransfers.map(transfer => ({
+                'Tarikh': formatTimestamp(transfer.timestamp),
+                'Aset': transfer.assetName || '',
+                'DHM': transfer.daftarHarta || '',
+                'Lokasi Dari': transfer.fromLocation || '',
+                'Sekolah Dari': getSchoolName(transfer.fromSchoolId) || '',
+                'Lokasi Ke': transfer.toLocation || '',
+                'Sekolah Ke': getSchoolName(transfer.toSchoolId) || '',
+                'Sebab': transfer.reason || '',
+                'Dipindahkan Oleh': transfer.transferredByEmail || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Transfer');
+
+            const filename = `Transfer_Aset_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_TRANSFERS', `Exported ${currentTransfers.length} transfer records to Excel`);
+            showToast('Data transfer berjaya di-export!', 'success');
+        }
+
+        function renderSchools() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Pengurusan Sekolah</h1>
+                            <p class="page-subtitle">Urus maklumat sekolah dalam sistem</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportSchoolsToExcel()">
+                                <span class="btn-icon">📊</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddSchoolModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Sekolah</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">��</div>
+                        </div>
+                        <div class="stat-value" id="total-schools">0</div>
+                        <div class="stat-label">Jumlah Sekolah</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">🎓</div>
+                        </div>
+                        <div class="stat-value" id="sk-schools">0</div>
+                        <div class="stat-label">Sekolah Kebangsaan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">🏛️</div>
+                        </div>
+                        <div class="stat-value" id="smk-schools">0</div>
+                        <div class="stat-label">Sekolah Menengah</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">📚</div>
+                        </div>
+                        <div class="stat-value" id="other-schools">0</div>
+                        <div class="stat-label">Lain-lain</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Sekolah</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Cari sekolah, kod, alamat..." 
+                               onkeyup="handleSchoolSearch(this.value)">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleSchoolTypeFilter(this.value)" id="schoolTypeFilter">
+                            <option value="">Semua Jenis</option>
+                            <option value="SK">SK - Sekolah Kebangsaan</option>
+                            <option value="SMK">SMK - Sekolah Menengah Kebangsaan</option>
+                            <option value="SJKC">SJKC - Sekolah Jenis Kebangsaan (Cina)</option>
+                            <option value="SJKT">SJKT - Sekolah Jenis Kebangsaan (Tamil)</option>
+                            <option value="SMA">SMA - Sekolah Menengah Agama</option>
+                            <option value="SMKA">SMKA - Sekolah Menengah Kebangsaan Agama</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearSchoolFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kod</th>
+                                    <th>Nama Sekolah</th>
+                                    <th>Jenis</th>
+                                    <th>Alamat</th>
+                                    <th>Telefon</th>
+                                    <th>Email</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schools-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            updateSchoolStats();
+            renderSchoolsTable();
+        }
+
+        function updateSchoolStats() {
+            const total = currentSchools.length;
+            const sk = currentSchools.filter(s => s.type === 'SK').length;
+            const smk = currentSchools.filter(s => s.type === 'SMK' || s.type === 'SMKA' || s.type === 'SMA').length;
+            const other = currentSchools.filter(s => s.type !== 'SK' && s.type !== 'SMK' && s.type !== 'SMKA' && s.type !== 'SMA').length;
+
+            const totalEl = document.getElementById('total-schools');
+            const skEl = document.getElementById('sk-schools');
+            const smkEl = document.getElementById('smk-schools');
+            const otherEl = document.getElementById('other-schools');
+
+            if (totalEl) totalEl.textContent = total;
+            if (skEl) skEl.textContent = sk;
+            if (smkEl) smkEl.textContent = smk;
+            if (otherEl) otherEl.textContent = other;
+        }
+
+        let schoolFilters = {
+            search: '',
+            type: ''
+        };
+
+        function handleSchoolSearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                schoolFilters.search = value;
+                renderSchoolsTable();
+            }, 300);
+        }
+
+        function handleSchoolTypeFilter(value) {
+            schoolFilters.type = value;
+            renderSchoolsTable();
+        }
+
+        function clearSchoolFilters() {
+            schoolFilters = {
+                search: '',
+                type: ''
+            };
+            document.querySelector('.search-input').value = '';
+            document.getElementById('schoolTypeFilter').value = '';
+            renderSchoolsTable();
+        }
+
+        function renderSchoolsTable() {
+            const tbody = document.getElementById('schools-tbody');
+            if (!tbody) return;
+
+            let filtered = [...currentSchools];
+
+            // Apply search filter
+            if (schoolFilters.search) {
+                const search = schoolFilters.search.toLowerCase();
+                filtered = filtered.filter(s => 
+                    (s.name || '').toLowerCase().includes(search) ||
+                    (s.code || '').toLowerCase().includes(search) ||
+                    (s.address || '').toLowerCase().includes(search) ||
+                    (s.email || '').toLowerCase().includes(search) ||
+                    (s.phone || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply type filter
+            if (schoolFilters.type) {
+                filtered = filtered.filter(s => s.type === schoolFilters.type);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-icon">🏫</div>
+                                <div class="empty-title">Tiada Sekolah</div>
+                                <div class="empty-text">Klik "Tambah Sekolah" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by code
+            filtered.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+
+            tbody.innerHTML = filtered.map(school => `
+                <tr>
+                    <td><strong>${school.code || 'N/A'}</strong></td>
+                    <td><strong>${school.name || 'N/A'}</strong></td>
+                    <td>${getSchoolTypeBadge(school.type)}</td>
+                    <td><small>${school.address || 'N/A'}</small></td>
+                    <td>${school.phone || 'N/A'}</td>
+                    <td><small>${school.email || 'N/A'}</small></td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="action-btn action-btn-view" onclick="showSchoolDetails('${school.id}')" title="Lihat">
+                                👁️
+                            </button>
+                            <button class="action-btn action-btn-edit" onclick="showEditSchoolModal('${school.id}')" title="Edit">
+                                ��️
+                            </button>
+                            <button class="action-btn action-btn-delete" onclick="confirmDeleteSchool('${school.id}')" title="Padam">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getSchoolTypeBadge(type) {
+            const typeMap = {
+                'SK': { text: 'SK', class: 'badge-success' },
+                'SMK': { text: 'SMK', class: 'badge-info' },
+                'SJKC': { text: 'SJKC', class: 'badge-warning' },
+                'SJKT': { text: 'SJKT', class: 'badge-warning' },
+                'SMA': { text: 'SMA', class: 'badge-purple' },
+                'SMKA': { text: 'SMKA', class: 'badge-purple' }
+            };
+            
+            const typeInfo = typeMap[type] || { text: type || 'N/A', class: 'badge-info' };
+            return `<span class="badge ${typeInfo.class}">
+                <span class="badge-dot"></span>
+                ${typeInfo.text}
+            </span>`;
+        }
+
+        function showAddSchoolModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Sekolah Baru</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addSchoolForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addSchoolCode">Kod Sekolah *</label>
+                                    <input type="text" class="form-control" id="addSchoolCode" placeholder="Contoh: ABAB001" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addSchoolType">Jenis Sekolah *</label>
+                                    <select class="form-control" id="addSchoolType" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="SK">SK - Sekolah Kebangsaan</option>
+                                        <option value="SMK">SMK - Sekolah Menengah Kebangsaan</option>
+                                        <option value="SJKC">SJKC - Sekolah Jenis Kebangsaan (Cina)</option>
+                                        <option value="SJKT">SJKT - Sekolah Jenis Kebangsaan (Tamil)</option>
+                                        <option value="SMA">SMA - Sekolah Menengah Agama</option>
+                                        <option value="SMKA">SMKA - Sekolah Menengah Kebangsaan Agama</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="addSchoolName">Nama Sekolah *</label>
+                                <input type="text" class="form-control" id="addSchoolName" placeholder="Contoh: SK Tapak Semenang" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="addSchoolAddress">Alamat *</label>
+                                <textarea class="form-control" id="addSchoolAddress" rows="3" placeholder="Alamat penuh sekolah" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addSchoolPhone">No. Telefon *</label>
+                                    <input type="tel" class="form-control" id="addSchoolPhone" placeholder="Contoh: 05-623 7109" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addSchoolEmail">Email *</label>
+                                    <input type="email" class="form-control" id="addSchoolEmail" placeholder="Contoh: sekolah@moe.gov.my" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addSchoolBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Sekolah</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('addSchoolForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addSchoolBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const schoolData = {
+                    code: document.getElementById('addSchoolCode').value.toUpperCase(),
+                    type: document.getElementById('addSchoolType').value,
+                    name: document.getElementById('addSchoolName').value,
+                    address: document.getElementById('addSchoolAddress').value,
+                    phone: document.getElementById('addSchoolPhone').value,
+                    email: document.getElementById('addSchoolEmail').value,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.uid,
+                    updatedBy: currentUser.email
+                };
+
+                try {
+                    // Check if code already exists
+                    const existingSchool = await collections.schools.where('code', '==', schoolData.code).get();
+                    if (!existingSchool.empty) {
+                        showToast('Kod sekolah sudah wujud!', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Sekolah</span>';
+                        return;
+                    }
+
+                    await collections.schools.add(schoolData);
+                    await logActivity('ADD_SCHOOL', `Added new school: ${schoolData.name}`);
+                    showToast('Sekolah berjaya ditambah!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menambah sekolah: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Sekolah</span>';
+                }
+            });
+        }
+
+        function showSchoolDetails(schoolId) {
+            const school = currentSchools.find(s => s.id === schoolId);
+            if (!school) {
+                showToast('Sekolah tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Sekolah - ${school.name}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kod Sekolah</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;"><strong>${school.code || 'N/A'}</strong></p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jenis Sekolah</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getSchoolTypeBadge(school.type)}</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nama Sekolah</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;"><strong>${school.name || 'N/A'}</strong></p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Alamat</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${school.address || 'N/A'}</p>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">No. Telefon</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">📞 ${school.phone || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">📧 ${school.email || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Dicipta Oleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${school.createdBy || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dikemaskini Oleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${school.updatedBy || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        <button class="btn btn-success" onclick="closeModal(this); showEditSchoolModal('${schoolId}')">
+                            <span class="btn-icon">✏️</span>
+                            <span>Edit</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            logActivity('VIEW_SCHOOL', `Viewed school details: ${school.name}`, schoolId);
+        }
+
+        function showEditSchoolModal(schoolId) {
+            const school = currentSchools.find(s => s.id === schoolId);
+            if (!school) {
+                showToast('Sekolah tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Sekolah - ${school.name}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="editSchoolForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editSchoolCode">Kod Sekolah *</label>
+                                    <input type="text" class="form-control" id="editSchoolCode" value="${school.code || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editSchoolType">Jenis Sekolah *</label>
+                                    <select class="form-control" id="editSchoolType" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="SK" ${school.type === 'SK' ? 'selected' : ''}>SK - Sekolah Kebangsaan</option>
+                                        <option value="SMK" ${school.type === 'SMK' ? 'selected' : ''}>SMK - Sekolah Menengah Kebangsaan</option>
+                                        <option value="SJKC" ${school.type === 'SJKC' ? 'selected' : ''}>SJKC - Sekolah Jenis Kebangsaan (Cina)</option>
+                                        <option value="SJKT" ${school.type === 'SJKT' ? 'selected' : ''}>SJKT - Sekolah Jenis Kebangsaan (Tamil)</option>
+                                        <option value="SMA" ${school.type === 'SMA' ? 'selected' : ''}>SMA - Sekolah Menengah Agama</option>
+                                        <option value="SMKA" ${school.type === 'SMKA' ? 'selected' : ''}>SMKA - Sekolah Menengah Kebangsaan Agama</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="editSchoolName">Nama Sekolah *</label>
+                                <input type="text" class="form-control" id="editSchoolName" value="${school.name || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="editSchoolAddress">Alamat *</label>
+                                <textarea class="form-control" id="editSchoolAddress" rows="3" required>${school.address || ''}</textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editSchoolPhone">No. Telefon *</label>
+                                    <input type="tel" class="form-control" id="editSchoolPhone" value="${school.phone || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editSchoolEmail">Email *</label>
+                                    <input type="email" class="form-control" id="editSchoolEmail" value="${school.email || ''}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="editSchoolBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('editSchoolForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('editSchoolBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const updatedData = {
+                    code: document.getElementById('editSchoolCode').value.toUpperCase(),
+                    type: document.getElementById('editSchoolType').value,
+                    name: document.getElementById('editSchoolName').value,
+                    address: document.getElementById('editSchoolAddress').value,
+                    phone: document.getElementById('editSchoolPhone').value,
+                    email: document.getElementById('editSchoolEmail').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.email
+                };
+
+                try {
+                    // Check if code already exists (excluding current school)
+                    if (updatedData.code !== school.code) {
+                        const existingSchool = await collections.schools.where('code', '==', updatedData.code).get();
+                        if (!existingSchool.empty) {
+                            showToast('Kod sekolah sudah wujud!', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                            return;
+                        }
+                    }
+
+                    await collections.schools.doc(schoolId).update(updatedData);
+                    await logActivity('EDIT_SCHOOL', `Updated school: ${updatedData.name}`, schoolId);
+                    await logAudit('school', schoolId, 'UPDATE', school, updatedData);
+                    showToast('Sekolah berjaya dikemaskini!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat mengemaskini sekolah: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                }
+            });
+        }
+
+        function confirmDeleteSchool(schoolId) {
+            const school = currentSchools.find(s => s.id === schoolId);
+            if (!school) {
+                showToast('Sekolah tidak dijumpai', 'error');
+                return;
+            }
+
+            // Check if school has assets
+            const schoolAssets = currentAssets.filter(a => a.schoolId === schoolId);
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Sekolah</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam sekolah ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Kod:</strong> ${school.code || 'N/A'}</p>
+                            <p><strong>Nama:</strong> ${school.name || 'N/A'}</p>
+                            <p><strong>Jenis:</strong> ${school.type || 'N/A'}</p>
+                        </div>
+                        ${schoolAssets.length > 0 ? `
+                            <div style="background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #fecaca;">
+                                <p style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">⚠️ Amaran!</p>
+                                <p style="color: #991b1b;">Sekolah ini mempunyai <strong>${schoolAssets.length} aset</strong> yang berkaitan.</p>
+                                <p style="color: #991b1b; font-size: 13px; margin-top: 8px;">Sila pindahkan atau padam aset tersebut terlebih dahulu.</p>
+                            </div>
+                        ` : `
+                            <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                        `}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        ${schoolAssets.length === 0 ? `
+                            <button class="btn btn-danger" onclick="executeDeleteSchool('${schoolId}')">
+                                <span class="btn-icon">🗑️</span>
+                                <span>Ya, Padam</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteSchool(schoolId) {
+            const school = currentSchools.find(s => s.id === schoolId);
+            
+            try {
+                await collections.schools.doc(schoolId).delete();
+                await logActivity('DELETE_SCHOOL', `Deleted school: ${school.name}`, schoolId);
+                await logAudit('school', schoolId, 'DELETE', school, null);
+                showToast('Sekolah berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam sekolah: ' + error.message, 'error');
+            }
+        }
+
+        async function exportSchoolsToExcel() {
+            if (currentSchools.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentSchools.map(school => ({
+                'Kod': school.code || '',
+                'Nama Sekolah': school.name || '',
+                'Jenis': school.type || '',
+                'Alamat': school.address || '',
+                'Telefon': school.phone || '',
+                'Email': school.email || '',
+                'Dicipta Oleh': school.createdBy || '',
+                'Dikemaskini Oleh': school.updatedBy || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sekolah');
+
+            const filename = `Senarai_Sekolah_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_SCHOOLS', `Exported ${currentSchools.length} schools to Excel`);
+            showToast('Data sekolah berjaya di-export!', 'success');
+        }
+
+        function renderVendors() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Pengurusan Vendor</h1>
+                    <p class="page-subtitle">Urus maklumat vendor</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏢</div>
+                        <div class="empty-title">Pengurusan Vendor</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderVendorsTable() {}
+
+        function renderMessages() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Mesej</h1>
+                    <p class="page-subtitle">Mesej dalaman sistem</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">���</div>
+                        <div class="empty-title">Sistem Mesej</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMessagesTable() {}
+
+        function renderUsers() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Pengurusan Pengguna</h1>
+                    <p class="page-subtitle">Urus pengguna sistem</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-title">Pengurusan Pengguna</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUsersTable() {}
+
+        function renderLogs() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Log Aktiviti</h1>
+                    <p class="page-subtitle">Lihat log aktiviti sistem</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <div class="empty-title">Log Aktiviti</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLogsTable() {}
+
+        function renderReports() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Laporan & Analitik</h1>
+                    <p class="page-subtitle">Lihat laporan dan statistik</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <div class="empty-title">Laporan & Analitik</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showMaintenance() {
+            addToNavigationHistory('maintenance');
+            currentPage = 'maintenance';
+            updateActiveNav('maintenance');
+            renderMaintenance();
+        }
+
+        function renderMaintenance() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Penyelenggaraan & Pembaikan</h1>
+                            <p class="page-subtitle">Urus penyelenggaraan, pembaikan dan servis aset</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportMaintenanceToExcel()">
+                                <span class="btn-icon">📊</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddMaintenanceModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Penyelenggaraan</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="nav-tabs">
+                    <a class="nav-tab active" onclick="switchMaintenanceTab('all', event)">
+                        <span class="nav-tab-icon">📋</span>
+                        <span>Semua</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchMaintenanceTab('pending', event)">
+                        <span class="nav-tab-icon">⏳</span>
+                        <span>Menunggu</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchMaintenanceTab('in-progress', event)">
+                        <span class="nav-tab-icon">🔧</span>
+                        <span>Dalam Proses</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchMaintenanceTab('completed', event)">
+                        <span class="nav-tab-icon">✓</span>
+                        <span>Selesai</span>
+                    </a>
+                    <a class="nav-tab" onclick="switchMaintenanceTab('scheduled', event)">
+                        <span class="nav-tab-icon">📅</span>
+                        <span>Dijadualkan</span>
+                    </a>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">🔧</div>
+                        </div>
+                        <div class="stat-value" id="total-maintenance">0</div>
+                        <div class="stat-label">Jumlah Rekod</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">⏳</div>
+                        </div>
+                        <div class="stat-value" id="pending-maintenance">0</div>
+                        <div class="stat-label">Menunggu</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">🔄</div>
+                        </div>
+                        <div class="stat-value" id="inprogress-maintenance">0</div>
+                        <div class="stat-label">Dalam Proses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">✓</div>
+                        </div>
+                        <div class="stat-value" id="completed-maintenance">0</div>
+                        <div class="stat-label">Selesai</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Penyelenggaraan</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">����</span>
+                        <input type="text" class="search-input" placeholder="Cari aset, DHM, teknisi..." 
+                               onkeyup="handleMaintenanceSearch(this.value)">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleMaintenanceStatusFilter(this.value)" id="maintenanceStatusFilter">
+                            <option value="">Semua Status</option>
+                            <option value="PENDING">Menunggu</option>
+                            <option value="IN_PROGRESS">Dalam Proses</option>
+                            <option value="COMPLETED">Selesai</option>
+                            <option value="SCHEDULED">Dijadualkan</option>
+                        </select>
+                        <select class="filter-select" onchange="handleMaintenanceTypeFilter(this.value)" id="maintenanceTypeFilter">
+                            <option value="">Semua Jenis</option>
+                            <option value="PREVENTIVE">Pencegahan</option>
+                            <option value="CORRECTIVE">Pembaikan</option>
+                            <option value="UPGRADE">Naik Taraf</option>
+                            <option value="INSPECTION">Pemeriksaan</option>
+                        </select>
+                        <select class="filter-select" onchange="handleMaintenanceSchoolFilter(this.value)" id="maintenanceSchoolFilter">
+                            <option value="">Semua Sekolah</option>
+                            ${currentSchools.map(school => 
+                                `<option value="${school.id}">${school.code} - ${school.name}</option>`
+                            ).join('')}
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearMaintenanceFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tarikh Lapor</th>
+                                    <th>Aset</th>
+                                    <th>DHM</th>
+                                    <th>Jenis</th>
+                                    <th>Masalah</th>
+                                    <th>Teknisi</th>
+                                    <th>Kos (RM)</th>
+                                    <th>Status</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenance-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            updateMaintenanceStats();
+            renderMaintenanceTable();
+        }
+
+        let currentMaintenance = [];
+        let maintenanceFilters = {
+            search: '',
+            status: '',
+            type: '',
+            school: ''
+        };
+
+        // Setup maintenance listener
+        function setupMaintenanceListener() {
+            db.collection('maintenance').onSnapshot((snapshot) => {
+                currentMaintenance = [];
+                snapshot.forEach((doc) => {
+                    currentMaintenance.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'maintenance') {
+                    updateMaintenanceStats();
+                    renderMaintenanceTable();
+                }
+            }, (error) => {
+                console.error('Error listening to maintenance:', error);
+            });
+        }
+
+        function updateMaintenanceStats() {
+            const total = currentMaintenance.length;
+            const pending = currentMaintenance.filter(m => m.status === 'PENDING').length;
+            const inProgress = currentMaintenance.filter(m => m.status === 'IN_PROGRESS').length;
+            const completed = currentMaintenance.filter(m => m.status === 'COMPLETED').length;
+
+            const totalEl = document.getElementById('total-maintenance');
+            const pendingEl = document.getElementById('pending-maintenance');
+            const inProgressEl = document.getElementById('inprogress-maintenance');
+            const completedEl = document.getElementById('completed-maintenance');
+
+            if (totalEl) totalEl.textContent = total;
+            if (pendingEl) pendingEl.textContent = pending;
+            if (inProgressEl) inProgressEl.textContent = inProgress;
+            if (completedEl) completedEl.textContent = completed;
+        }
+
+        function handleMaintenanceSearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                maintenanceFilters.search = value;
+                renderMaintenanceTable();
+            }, 300);
+        }
+
+        function handleMaintenanceStatusFilter(value) {
+            maintenanceFilters.status = value;
+            renderMaintenanceTable();
+        }
+
+        function handleMaintenanceTypeFilter(value) {
+            maintenanceFilters.type = value;
+            renderMaintenanceTable();
+        }
+
+        function handleMaintenanceSchoolFilter(value) {
+            maintenanceFilters.school = value;
+            renderMaintenanceTable();
+        }
+
+        function clearMaintenanceFilters() {
+            maintenanceFilters = {
+                search: '',
+                status: '',
+                type: '',
+                school: ''
+            };
+            document.querySelector('.search-input').value = '';
+            document.getElementById('maintenanceStatusFilter').value = '';
+            document.getElementById('maintenanceTypeFilter').value = '';
+            document.getElementById('maintenanceSchoolFilter').value = '';
+            renderMaintenanceTable();
+        }
+
+        function switchMaintenanceTab(tab, event) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.nav-tab').classList.add('active');
+
+            maintenanceFilters = {
+                search: '',
+                status: '',
+                type: '',
+                school: ''
+            };
+
+            switch(tab) {
+                case 'all':
+                    break;
+                case 'pending':
+                    maintenanceFilters.status = 'PENDING';
+                    break;
+                case 'in-progress':
+                    maintenanceFilters.status = 'IN_PROGRESS';
+                    break;
+                case 'completed':
+                    maintenanceFilters.status = 'COMPLETED';
+                    break;
+                case 'scheduled':
+                    maintenanceFilters.status = 'SCHEDULED';
+                    break;
+            }
+
+            document.getElementById('maintenanceStatusFilter').value = maintenanceFilters.status;
+            renderMaintenanceTable();
+        }
+
+        function renderMaintenanceTable() {
+            const tbody = document.getElementById('maintenance-tbody');
+            if (!tbody) return;
+
+            let filtered = [...currentMaintenance];
+
+            // Apply search filter
+            if (maintenanceFilters.search) {
+                const search = maintenanceFilters.search.toLowerCase();
+                filtered = filtered.filter(m => 
+                    (m.assetName || '').toLowerCase().includes(search) ||
+                    (m.daftarHarta || '').toLowerCase().includes(search) ||
+                    (m.problem || '').toLowerCase().includes(search) ||
+                    (m.technician || '').toLowerCase().includes(search) ||
+                    (m.solution || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply status filter
+            if (maintenanceFilters.status) {
+                filtered = filtered.filter(m => m.status === maintenanceFilters.status);
+            }
+
+            // Apply type filter
+            if (maintenanceFilters.type) {
+                filtered = filtered.filter(m => m.type === maintenanceFilters.type);
+            }
+
+            // Apply school filter
+            if (maintenanceFilters.school) {
+                filtered = filtered.filter(m => m.schoolId === maintenanceFilters.school);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-icon">🔧</div>
+                                <div class="empty-title">Tiada Rekod Penyelenggaraan</div>
+                                <div class="empty-text">Klik "Tambah Penyelenggaraan" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by report date (newest first)
+            filtered.sort((a, b) => {
+                const dateA = a.reportDate ? new Date(a.reportDate) : new Date(0);
+                const dateB = b.reportDate ? new Date(b.reportDate) : new Date(0);
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = filtered.map(maintenance => `
+                <tr>
+                    <td>${formatDate(maintenance.reportDate)}</td>
+                    <td><strong>${maintenance.assetName || 'N/A'}</strong></td>
+                    <td>${maintenance.daftarHarta || 'N/A'}</td>
+                    <td>${getMaintenanceTypeBadge(maintenance.type)}</td>
+                    <td><small>${(maintenance.problem || '').substring(0, 50)}${(maintenance.problem || '').length > 50 ? '...' : ''}</small></td>
+                    <td>${maintenance.technician || '-'}</td>
+                    <td>${maintenance.cost ? 'RM ' + parseFloat(maintenance.cost).toFixed(2) : '-'}</td>
+                    <td>${getMaintenanceStatusBadge(maintenance.status)}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="action-btn action-btn-view" onclick="showMaintenanceDetails('${maintenance.id}')" title="Lihat">
+                                👁���
+                            </button>
+                            ${maintenance.status !== 'COMPLETED' ? `
+                                <button class="action-btn action-btn-edit" onclick="showUpdateMaintenanceModal('${maintenance.id}')" title="Kemaskini">
+                                    ✏️
+                                </button>
+                            ` : ''}
+                            <button class="action-btn action-btn-delete" onclick="confirmDeleteMaintenance('${maintenance.id}')" title="Padam">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getMaintenanceStatusBadge(status) {
+            const statusMap = {
+                'PENDING': { text: 'MENUNGGU', class: 'badge-warning' },
+                'IN_PROGRESS': { text: 'DALAM PROSES', class: 'badge-info' },
+                'COMPLETED': { text: 'SELESAI', class: 'badge-success' },
+                'SCHEDULED': { text: 'DIJADUALKAN', class: 'badge-purple' }
+            };
+            
+            const statusInfo = statusMap[status] || { text: status, class: 'badge-info' };
+            return `<span class="badge ${statusInfo.class}">
+                <span class="badge-dot"></span>
+                ${statusInfo.text}
+            </span>`;
+        }
+
+        function getMaintenanceTypeBadge(type) {
+            const typeMap = {
+                'PREVENTIVE': { text: 'PENCEGAHAN', class: 'badge-success' },
+                'CORRECTIVE': { text: 'PEMBAIKAN', class: 'badge-danger' },
+                'UPGRADE': { text: 'NAIK TARAF', class: 'badge-info' },
+                'INSPECTION': { text: 'PEMERIKSAAN', class: 'badge-warning' }
+            };
+            
+            const typeInfo = typeMap[type] || { text: type, class: 'badge-info' };
+            return `<span class="badge ${typeInfo.class}">${typeInfo.text}</span>`;
+        }
+
+        function showAddMaintenanceModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Penyelenggaraan Baru</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addMaintenanceForm">
+                        <div class="modal-body">
+                            <h4 style="margin-bottom: 16px; color: #0f172a;">Maklumat Aset</h4>
+                            <div class="form-group">
+                                <label class="form-label" for="maintenanceAssetSearch">Cari Aset *</label>
+                                <div style="position: relative;">
+                                    <input type="text" class="form-control" id="maintenanceAssetSearch" 
+                                           placeholder="Cari mengikut nama, DHM, model, casis..." 
+                                           autocomplete="off"
+                                           oninput="filterMaintenanceAssets(this.value)"
+                                           onfocus="showMaintenanceAssetList()"
+                                           required>
+                                    <input type="hidden" id="maintenanceAssetId" required>
+                                    <div id="maintenanceAssetList" style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); z-index: 1000;">
+                                    </div>
+                                </div>
+                                <div id="selectedMaintenanceAssetInfo" style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; display: none;">
+                                    <p style="margin: 0; color: #166534; font-size: 14px;">
+                                        <strong>Terpilih:</strong> <span id="selectedMaintenanceAssetDisplay"></span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 24px 0 16px; color: #0f172a;">Butiran Penyelenggaraan</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="maintenanceType">Jenis *</label>
+                                    <select class="form-control" id="maintenanceType" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="PREVENTIVE">Penyelenggaraan Pencegahan</option>
+                                        <option value="CORRECTIVE">Pembaikan/Pembetulan</option>
+                                        <option value="UPGRADE">Naik Taraf</option>
+                                        <option value="INSPECTION">Pemeriksaan</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="maintenanceStatus">Status *</label>
+                                    <select class="form-control" id="maintenanceStatus" required>
+                                        <option value="PENDING">Menunggu</option>
+                                        <option value="IN_PROGRESS">Dalam Proses</option>
+                                        <option value="COMPLETED">Selesai</option>
+                                        <option value="SCHEDULED">Dijadualkan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="reportDate">Tarikh Lapor *</label>
+                                    <input type="date" class="form-control" id="reportDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="scheduledDate">Tarikh Dijadualkan</label>
+                                    <input type="date" class="form-control" id="scheduledDate">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="maintenanceProblem">Masalah/Keperluan *</label>
+                                <textarea class="form-control" id="maintenanceProblem" rows="3" placeholder="Huraikan masalah atau keperluan penyelenggaraan" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="maintenanceSolution">Tindakan/Penyelesaian</label>
+                                <textarea class="form-control" id="maintenanceSolution" rows="3" placeholder="Huraikan tindakan yang diambil"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="maintenanceTechnician">Teknisi</label>
+                                    <input type="text" class="form-control" id="maintenanceTechnician" placeholder="Nama teknisi">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="maintenanceCost">Kos (RM)</label>
+                                    <input type="number" class="form-control" id="maintenanceCost" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="maintenanceNotes">Nota Tambahan</label>
+                                <textarea class="form-control" id="maintenanceNotes" rows="2" placeholder="Nota atau maklumat tambahan"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addMaintenanceBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = today;
+
+            // Setup asset search functionality
+            let maintenanceAssetTimeout;
+            window.filterMaintenanceAssets = function(searchValue) {
+                clearTimeout(maintenanceAssetTimeout);
+                maintenanceAssetTimeout = setTimeout(() => {
+                    const listDiv = document.getElementById('maintenanceAssetList');
+                    if (!searchValue || searchValue.length < 2) {
+                        listDiv.style.display = 'none';
+                        return;
+                    }
+
+                    const search = searchValue.toLowerCase();
+                    const filtered = currentAssets.filter(asset => 
+                        (asset.namaKomputer || '').toLowerCase().includes(search) ||
+                        (asset.daftarHarta || '').toLowerCase().includes(search) ||
+                        (asset.jenamModel || '').toLowerCase().includes(search) ||
+                        (asset.noCasis || '').toLowerCase().includes(search)
+                    );
+
+                    if (filtered.length === 0) {
+                        listDiv.innerHTML = '<div style="padding: 12px; color: #64748b; text-align: center;">Tiada aset dijumpai</div>';
+                        listDiv.style.display = 'block';
+                        return;
+                    }
+
+                    listDiv.innerHTML = filtered.slice(0, 20).map(asset => `
+                        <div onclick="selectMaintenanceAsset('${asset.id}', '${(asset.namaKomputer || '').replace(/'/g, "\\'")}', '${(asset.daftarHarta || '').replace(/'/g, "\\'")}', '${asset.schoolId || ''}')" 
+                             style="padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
+                             onmouseover="this.style.background='#f8fafc'" 
+                             onmouseout="this.style.background='white'">
+                            <div style="font-weight: 600; color: #0f172a; margin-bottom: 4px;">${asset.namaKomputer || 'N/A'}</div>
+                            <div style="font-size: 13px; color: #64748b;">
+                                <span>📋 DHM: ${asset.daftarHarta || 'N/A'}</span> • 
+                                <span>Model: ${asset.jenamModel || 'N/A'}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                                📍 ${asset.lokasi || 'N/A'} • ${getSchoolName(asset.schoolId) || 'N/A'}
+                            </div>
+                        </div>
+                    `).join('');
+                    listDiv.style.display = 'block';
+                }, 300);
+            };
+
+            window.showMaintenanceAssetList = function() {
+                const searchValue = document.getElementById('maintenanceAssetSearch').value;
+                if (searchValue && searchValue.length >= 2) {
+                    filterMaintenanceAssets(searchValue);
+                }
+            };
+
+            window.selectMaintenanceAsset = function(id, name, dhm, schoolId) {
+                document.getElementById('maintenanceAssetId').value = id;
+                document.getElementById('maintenanceAssetSearch').value = `${name} - ${dhm}`;
+                document.getElementById('maintenanceAssetList').style.display = 'none';
+                
+                // Show selected asset info
+                const infoDiv = document.getElementById('selectedMaintenanceAssetInfo');
+                const displaySpan = document.getElementById('selectedMaintenanceAssetDisplay');
+                displaySpan.textContent = `${name} (DHM: ${dhm})`;
+                infoDiv.style.display = 'block';
+            };
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function maintenanceClickHandler(e) {
+                const searchInput = document.getElementById('maintenanceAssetSearch');
+                const listDiv = document.getElementById('maintenanceAssetList');
+                if (searchInput && listDiv && !searchInput.contains(e.target) && !listDiv.contains(e.target)) {
+                    listDiv.style.display = 'none';
+                }
+            });
+
+            document.getElementById('addMaintenanceForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addMaintenanceBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const assetId = document.getElementById('maintenanceAssetId').value;
+                const asset = currentAssets.find(a => a.id === assetId);
+
+                const maintenanceData = {
+                    assetId: assetId,
+                    assetName: asset ? asset.namaKomputer : '',
+                    daftarHarta: asset ? asset.daftarHarta : '',
+                    schoolId: asset ? asset.schoolId : '',
+                    type: document.getElementById('maintenanceType').value,
+                    status: document.getElementById('maintenanceStatus').value,
+                    reportDate: document.getElementById('reportDate').value,
+                    scheduledDate: document.getElementById('scheduledDate').value || null,
+                    problem: document.getElementById('maintenanceProblem').value,
+                    solution: document.getElementById('maintenanceSolution').value || '',
+                    technician: document.getElementById('maintenanceTechnician').value || '',
+                    cost: parseFloat(document.getElementById('maintenanceCost').value) || 0,
+                    notes: document.getElementById('maintenanceNotes').value || '',
+                    reportedBy: currentUser.uid,
+                    reportedByEmail: currentUser.email,
+                    completedDate: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    await db.collection('maintenance').add(maintenanceData);
+                    await logActivity('ADD_MAINTENANCE', `Added maintenance record: ${maintenanceData.assetName} - ${maintenanceData.type}`);
+                    showToast('Rekod penyelenggaraan berjaya ditambah!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menambah rekod: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan</span>';
+                }
+            });
+        }
+
+        function updateMaintenanceAssetInfo(assetId) {
+            // Placeholder for future asset info display
+        }
+
+        function showMaintenanceDetails(maintenanceId) {
+            const maintenance = currentMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) {
+                showToast('Rekod tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Penyelenggaraan</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <h4 style="margin-bottom: 16px; color: #0f172a;">Maklumat Aset</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Aset</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;"><strong>${maintenance.assetName || 'N/A'}</strong></p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daftar Harta (DHM)</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.daftarHarta || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sekolah</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getSchoolName(maintenance.schoolId) || 'N/A'}</p>
+                        </div>
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Butiran Penyelenggaraan</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Jenis</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getMaintenanceTypeBadge(maintenance.type)}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getMaintenanceStatusBadge(maintenance.status)}</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tarikh Lapor</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${formatDate(maintenance.reportDate)}</p>
+                            </div>
+                            ${maintenance.scheduledDate ? `
+                            <div class="form-group">
+                                <label class="form-label">Tarikh Dijadualkan</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${formatDate(maintenance.scheduledDate)}</p>
+                            </div>
+                            ` : '<div class="form-group"></div>'}
+                        </div>
+                        ${maintenance.completedDate ? `
+                        <div class="form-group">
+                            <label class="form-label">Tarikh Selesai</label>
+                            <p style="padding: 10px; background: #f0fdf4; border-radius: 6px; color: #166534;">${formatDate(maintenance.completedDate)}</p>
+                        </div>
+                        ` : ''}
+                        <div class="form-group">
+                            <label class="form-label">Masalah/Keperluan</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.problem || 'N/A'}</p>
+                        </div>
+                        ${maintenance.solution ? `
+                        <div class="form-group">
+                            <label class="form-label">Tindakan/Penyelesaian</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.solution}</p>
+                        </div>
+                        ` : ''}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Teknisi</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.technician || '-'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kos</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.cost ? 'RM ' + parseFloat(maintenance.cost).toFixed(2) : '-'}</p>
+                            </div>
+                        </div>
+                        ${maintenance.notes ? `
+                        <div class="form-group">
+                            <label class="form-label">Nota</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.notes}</p>
+                        </div>
+                        ` : ''}
+
+                        <h4 style="margin: 24px 0 16px; color: #0f172a;">Maklumat Laporan</h4>
+                        <div class="form-group">
+                            <label class="form-label">Dilaporkan Oleh</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${maintenance.reportedByEmail || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        ${maintenance.status !== 'COMPLETED' ? `
+                            <button class="btn btn-success" onclick="closeModal(this); showUpdateMaintenanceModal('${maintenanceId}')">
+                                <span class="btn-icon">✏️</span>
+                                <span>Kemaskini Status</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            logActivity('VIEW_MAINTENANCE', `Viewed maintenance details: ${maintenance.assetName}`, maintenanceId);
+        }
+
+        function showUpdateMaintenanceModal(maintenanceId) {
+            const maintenance = currentMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) {
+                showToast('Rekod tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog large">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Kemaskini Penyelenggaraan</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="updateMaintenanceForm">
+                        <div class="modal-body">
+                            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                                <p><strong>Aset:</strong> ${maintenance.assetName}</p>
+                                <p><strong>DHM:</strong> ${maintenance.daftarHarta || 'N/A'}</p>
+                                <p><strong>Tarikh Lapor:</strong> ${formatDate(maintenance.reportDate)}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="updateMaintenanceStatus">Status *</label>
+                                <select class="form-control" id="updateMaintenanceStatus" required>
+                                    <option value="PENDING" ${maintenance.status === 'PENDING' ? 'selected' : ''}>Menunggu</option>
+                                    <option value="IN_PROGRESS" ${maintenance.status === 'IN_PROGRESS' ? 'selected' : ''}>Dalam Proses</option>
+                                    <option value="COMPLETED" ${maintenance.status === 'COMPLETED' ? 'selected' : ''}>Selesai</option>
+                                    <option value="SCHEDULED" ${maintenance.status === 'SCHEDULED' ? 'selected' : ''}>Dijadualkan</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="completedDateGroup" style="${maintenance.status === 'COMPLETED' ? '' : 'display: none;'}">
+                                <label class="form-label" for="completedDate">Tarikh Selesai</label>
+                                <input type="date" class="form-control" id="completedDate" value="${maintenance.completedDate || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="updateMaintenanceSolution">Tindakan/Penyelesaian</label>
+                                <textarea class="form-control" id="updateMaintenanceSolution" rows="3">${maintenance.solution || ''}</textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="updateMaintenanceTechnician">Teknisi</label>
+                                    <input type="text" class="form-control" id="updateMaintenanceTechnician" value="${maintenance.technician || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="updateMaintenanceCost">Kos (RM)</label>
+                                    <input type="number" class="form-control" id="updateMaintenanceCost" step="0.01" min="0" value="${maintenance.cost || 0}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="updateMaintenanceNotes">Nota Tambahan</label>
+                                <textarea class="form-control" id="updateMaintenanceNotes" rows="2">${maintenance.notes || ''}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="updateMaintenanceBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            // Show/hide completed date based on status
+            document.getElementById('updateMaintenanceStatus').addEventListener('change', function() {
+                const completedGroup = document.getElementById('completedDateGroup');
+                if (this.value === 'COMPLETED') {
+                    completedGroup.style.display = 'block';
+                    const completedDateInput = document.getElementById('completedDate');
+                    if (!completedDateInput.value) {
+                        completedDateInput.value = new Date().toISOString().split('T')[0];
+                    }
+                } else {
+                    completedGroup.style.display = 'none';
+                }
+            });
+
+            document.getElementById('updateMaintenanceForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('updateMaintenanceBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const status = document.getElementById('updateMaintenanceStatus').value;
+                const updatedData = {
+                    status: status,
+                    solution: document.getElementById('updateMaintenanceSolution').value,
+                    technician: document.getElementById('updateMaintenanceTechnician').value,
+                    cost: parseFloat(document.getElementById('updateMaintenanceCost').value) || 0,
+                    notes: document.getElementById('updateMaintenanceNotes').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (status === 'COMPLETED') {
+                    updatedData.completedDate = document.getElementById('completedDate').value || new Date().toISOString().split('T')[0];
+                } else {
+                    updatedData.completedDate = null;
+                }
+
+                try {
+                    await db.collection('maintenance').doc(maintenanceId).update(updatedData);
+                    await logActivity('UPDATE_MAINTENANCE', `Updated maintenance: ${maintenance.assetName} - ${status}`, maintenanceId);
+                    showToast('Rekod penyelenggaraan berjaya dikemaskini!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat mengemaskini rekod: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                }
+            });
+        }
+
+        function confirmDeleteMaintenance(maintenanceId) {
+            const maintenance = currentMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) {
+                showToast('Rekod tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Rekod Penyelenggaraan</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam rekod ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Aset:</strong> ${maintenance.assetName}</p>
+                            <p><strong>Jenis:</strong> ${maintenance.type}</p>
+                            <p><strong>Tarikh:</strong> ${formatDate(maintenance.reportDate)}</p>
+                        </div>
+                        <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        <button class="btn btn-danger" onclick="executeDeleteMaintenance('${maintenanceId}')">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Ya, Padam</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteMaintenance(maintenanceId) {
+            const maintenance = currentMaintenance.find(m => m.id === maintenanceId);
+            
+            try {
+                await db.collection('maintenance').doc(maintenanceId).delete();
+                await logActivity('DELETE_MAINTENANCE', `Deleted maintenance record: ${maintenance.assetName}`, maintenanceId);
+                showToast('Rekod penyelenggaraan berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam rekod: ' + error.message, 'error');
+            }
+        }
+
+        async function exportMaintenanceToExcel() {
+            if (currentMaintenance.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentMaintenance.map(maintenance => ({
+                'Tarikh Lapor': maintenance.reportDate || '',
+                'Aset': maintenance.assetName || '',
+                'DHM': maintenance.daftarHarta || '',
+                'Sekolah': getSchoolName(maintenance.schoolId) || '',
+                'Jenis': maintenance.type || '',
+                'Masalah': maintenance.problem || '',
+                'Penyelesaian': maintenance.solution || '',
+                'Teknisi': maintenance.technician || '',
+                'Kos (RM)': maintenance.cost || 0,
+                'Status': maintenance.status || '',
+                'Tarikh Dijadualkan': maintenance.scheduledDate || '',
+                'Tarikh Selesai': maintenance.completedDate || '',
+                'Dilaporkan Oleh': maintenance.reportedByEmail || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Penyelenggaraan');
+
+            const filename = `Penyelenggaraan_Aset_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_MAINTENANCE', `Exported ${currentMaintenance.length} maintenance records to Excel`);
+            showToast('Data penyelenggaraan berjaya di-export!', 'success');
+        }
+
+        function showCategories() {
+            addToNavigationHistory('categories');
+            currentPage = 'categories';
+            updateActiveNav('categories');
+            renderCategories();
+        }
+
+        let currentCategories = [];
+        let categoryFilters = {
+            search: ''
+        };
+
+        function renderCategories() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <div>
+                            <h1 class="page-title">Kategori Aset</h1>
+                            <p class="page-subtitle">Urus kategori dan klasifikasi aset ICT</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="exportCategoriesToExcel()">
+                                <span class="btn-icon">📊</span>
+                                <span>Export Excel</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                                <span class="btn-icon">➕</span>
+                                <span>Tambah Kategori</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">📂</div>
+                        </div>
+                        <div class="stat-value" id="total-categories">0</div>
+                        <div class="stat-label">Jumlah Kategori</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">💻</div>
+                        </div>
+                        <div class="stat-value" id="hardware-categories">0</div>
+                        <div class="stat-label">Perkakasan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">💿</div>
+                        </div>
+                        <div class="stat-value" id="software-categories">0</div>
+                        <div class="stat-label">Perisian</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon orange">📦</div>
+                        </div>
+                        <div class="stat-value" id="other-categories">0</div>
+                        <div class="stat-label">Lain-lain</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Senarai Kategori</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Cari kategori, kod, penerangan..." 
+                               onkeyup="handleCategorySearch(this.value)">
+                    </div>
+
+                    <div class="filter-bar">
+                        <select class="filter-select" onchange="handleCategoryTypeFilter(this.value)" id="categoryTypeFilter">
+                            <option value="">Semua Jenis</option>
+                            <option value="HARDWARE">Perkakasan</option>
+                            <option value="SOFTWARE">Perisian</option>
+                            <option value="NETWORK">Rangkaian</option>
+                            <option value="FURNITURE">Perabot</option>
+                            <option value="ACCESSORY">Aksesori</option>
+                            <option value="OTHER">Lain-lain</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearCategoryFilters()">
+                            <span class="btn-icon">✕</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kod</th>
+                                    <th>Nama Kategori</th>
+                                    <th>Jenis</th>
+                                    <th>Penerangan</th>
+                                    <th>Jumlah Aset</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Setup category listener
+            setupCategoryListener();
+            updateCategoryStats();
+            renderCategoriesTable();
+        }
+
+        function setupCategoryListener() {
+            db.collection('categories').onSnapshot((snapshot) => {
+                currentCategories = [];
+                snapshot.forEach((doc) => {
+                    currentCategories.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                if (currentPage === 'categories') {
+                    updateCategoryStats();
+                    renderCategoriesTable();
+                }
+            }, (error) => {
+                console.error('Error listening to categories:', error);
+            });
+        }
+
+        function updateCategoryStats() {
+            const total = currentCategories.length;
+            const hardware = currentCategories.filter(c => c.type === 'HARDWARE').length;
+            const software = currentCategories.filter(c => c.type === 'SOFTWARE').length;
+            const other = currentCategories.filter(c => c.type !== 'HARDWARE' && c.type !== 'SOFTWARE').length;
+
+            const totalEl = document.getElementById('total-categories');
+            const hardwareEl = document.getElementById('hardware-categories');
+            const softwareEl = document.getElementById('software-categories');
+            const otherEl = document.getElementById('other-categories');
+
+            if (totalEl) totalEl.textContent = total;
+            if (hardwareEl) hardwareEl.textContent = hardware;
+            if (softwareEl) softwareEl.textContent = software;
+            if (otherEl) otherEl.textContent = other;
+        }
+
+        function handleCategorySearch(value) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                categoryFilters.search = value;
+                renderCategoriesTable();
+            }, 300);
+        }
+
+        function handleCategoryTypeFilter(value) {
+            categoryFilters.type = value;
+            renderCategoriesTable();
+        }
+
+        function clearCategoryFilters() {
+            categoryFilters = {
+                search: '',
+                type: ''
+            };
+            document.querySelector('.search-input').value = '';
+            document.getElementById('categoryTypeFilter').value = '';
+            renderCategoriesTable();
+        }
+
+        function renderCategoriesTable() {
+            const tbody = document.getElementById('categories-tbody');
+            if (!tbody) return;
+
+            let filtered = [...currentCategories];
+
+            // Apply search filter
+            if (categoryFilters.search) {
+                const search = categoryFilters.search.toLowerCase();
+                filtered = filtered.filter(c => 
+                    (c.name || '').toLowerCase().includes(search) ||
+                    (c.code || '').toLowerCase().includes(search) ||
+                    (c.description || '').toLowerCase().includes(search)
+                );
+            }
+
+            // Apply type filter
+            if (categoryFilters.type) {
+                filtered = filtered.filter(c => c.type === categoryFilters.type);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon">📂</div>
+                                <div class="empty-title">Tiada Kategori</div>
+                                <div class="empty-text">Klik "Tambah Kategori" untuk memulakan</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by code
+            filtered.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+
+            tbody.innerHTML = filtered.map(category => {
+                const assetCount = currentAssets.filter(a => a.kategori === category.name).length;
+                return `
+                    <tr>
+                        <td><strong>${category.code || 'N/A'}</strong></td>
+                        <td><strong>${category.name || 'N/A'}</strong></td>
+                        <td>${getCategoryTypeBadge(category.type)}</td>
+                        <td><small>${category.description || '-'}</small></td>
+                        <td>
+                            <span class="badge badge-info">
+                                <span class="badge-dot"></span>
+                                ${assetCount} aset
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="action-btn action-btn-view" onclick="showCategoryDetails('${category.id}')" title="Lihat">
+                                    👁️
+                                </button>
+                                <button class="action-btn action-btn-edit" onclick="showEditCategoryModal('${category.id}')" title="Edit">
+                                    ✏️
+                                </button>
+                                <button class="action-btn action-btn-delete" onclick="confirmDeleteCategory('${category.id}')" title="Padam">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getCategoryTypeBadge(type) {
+            const typeMap = {
+                'HARDWARE': { text: 'PERKAKASAN', class: 'badge-success', icon: '💻' },
+                'SOFTWARE': { text: 'PERISIAN', class: 'badge-info', icon: '💿' },
+                'NETWORK': { text: 'RANGKAIAN', class: 'badge-purple', icon: '🌐' },
+                'FURNITURE': { text: 'PERABOT', class: 'badge-warning', icon: '🪑' },
+                'ACCESSORY': { text: 'AKSESORI', class: 'badge-info', icon: '🔌' },
+                'OTHER': { text: 'LAIN-LAIN', class: 'badge-secondary', icon: '📦' }
+            };
+            
+            const typeInfo = typeMap[type] || { text: type || 'N/A', class: 'badge-info', icon: '📂' };
+            return `<span class="badge ${typeInfo.class}">
+                ${typeInfo.icon} ${typeInfo.text}
+            </span>`;
+        }
+
+        function showAddCategoryModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Tambah Kategori Baru</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="addCategoryForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="addCategoryCode">Kod Kategori *</label>
+                                    <input type="text" class="form-control" id="addCategoryCode" placeholder="Contoh: CAT-001" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="addCategoryType">Jenis *</label>
+                                    <select class="form-control" id="addCategoryType" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="HARDWARE">💻 Perkakasan</option>
+                                        <option value="SOFTWARE">💿 Perisian</option>
+                                        <option value="NETWORK">🌐 Rangkaian</option>
+                                        <option value="FURNITURE">🪑 Perabot</option>
+                                        <option value="ACCESSORY">🔌 Aksesori</option>
+                                        <option value="OTHER">📦 Lain-lain</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="addCategoryName">Nama Kategori *</label>
+                                <input type="text" class="form-control" id="addCategoryName" placeholder="Contoh: Desktop Computer" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="addCategoryDescription">Penerangan</label>
+                                <textarea class="form-control" id="addCategoryDescription" rows="3" placeholder="Penerangan ringkas tentang kategori ini"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="addCategoryBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Kategori</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('addCategoryForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('addCategoryBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const categoryData = {
+                    code: document.getElementById('addCategoryCode').value.toUpperCase(),
+                    type: document.getElementById('addCategoryType').value,
+                    name: document.getElementById('addCategoryName').value,
+                    description: document.getElementById('addCategoryDescription').value,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.uid,
+                    updatedBy: currentUser.email
+                };
+
+                try {
+                    // Check if code already exists
+                    const existingCategory = await db.collection('categories').where('code', '==', categoryData.code).get();
+                    if (!existingCategory.empty) {
+                        showToast('Kod kategori sudah wujud!', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Kategori</span>';
+                        return;
+                    }
+
+                    await db.collection('categories').add(categoryData);
+                    await logActivity('ADD_CATEGORY', `Added new category: ${categoryData.name}`);
+                    showToast('Kategori berjaya ditambah!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat menambah kategori: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Kategori</span>';
+                }
+            });
+        }
+
+        function showCategoryDetails(categoryId) {
+            const category = currentCategories.find(c => c.id === categoryId);
+            if (!category) {
+                showToast('Kategori tidak dijumpai', 'error');
+                return;
+            }
+
+            const assetCount = currentAssets.filter(a => a.kategori === category.name).length;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Butiran Kategori - ${category.name}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kod Kategori</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;"><strong>${category.code || 'N/A'}</strong></p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Jenis</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${getCategoryTypeBadge(category.type)}</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nama Kategori</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;"><strong>${category.name || 'N/A'}</strong></p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Penerangan</label>
+                            <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${category.description || '-'}</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Aset</label>
+                            <p style="padding: 10px; background: #f0fdf4; border-radius: 6px; color: #166534;">
+                                <strong>${assetCount} aset</strong> menggunakan kategori ini
+                            </p>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Dicipta Oleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${category.createdBy || 'N/A'}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dikemaskini Oleh</label>
+                                <p style="padding: 10px; background: #f8fafc; border-radius: 6px;">${category.updatedBy || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Tutup</button>
+                        <button class="btn btn-success" onclick="closeModal(this); showEditCategoryModal('${categoryId}')">
+                            <span class="btn-icon">✏️</span>
+                            <span>Edit</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+            logActivity('VIEW_CATEGORY', `Viewed category details: ${category.name}`, categoryId);
+        }
+
+        function showEditCategoryModal(categoryId) {
+            const category = currentCategories.find(c => c.id === categoryId);
+            if (!category) {
+                showToast('Kategori tidak dijumpai', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Kategori - ${category.name}</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <form id="editCategoryForm">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="editCategoryCode">Kod Kategori *</label>
+                                    <input type="text" class="form-control" id="editCategoryCode" value="${category.code || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="editCategoryType">Jenis *</label>
+                                    <select class="form-control" id="editCategoryType" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="HARDWARE" ${category.type === 'HARDWARE' ? 'selected' : ''}>💻 Perkakasan</option>
+                                        <option value="SOFTWARE" ${category.type === 'SOFTWARE' ? 'selected' : ''}>💿 Perisian</option>
+                                        <option value="NETWORK" ${category.type === 'NETWORK' ? 'selected' : ''}>🌐 Rangkaian</option>
+                                        <option value="FURNITURE" ${category.type === 'FURNITURE' ? 'selected' : ''}>🪑 Perabot</option>
+                                        <option value="ACCESSORY" ${category.type === 'ACCESSORY' ? 'selected' : ''}>🔌 Aksesori</option>
+                                        <option value="OTHER" ${category.type === 'OTHER' ? 'selected' : ''}>📦 Lain-lain</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="editCategoryName">Nama Kategori *</label>
+                                <input type="text" class="form-control" id="editCategoryName" value="${category.name || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="editCategoryDescription">Penerangan</label>
+                                <textarea class="form-control" id="editCategoryDescription" rows="3">${category.description || ''}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="editCategoryBtn">
+                                <span class="btn-icon">💾</span>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            document.getElementById('editCategoryForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = document.getElementById('editCategoryBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> <span>Menyimpan...</span>';
+
+                const updatedData = {
+                    code: document.getElementById('editCategoryCode').value.toUpperCase(),
+                    type: document.getElementById('editCategoryType').value,
+                    name: document.getElementById('editCategoryName').value,
+                    description: document.getElementById('editCategoryDescription').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.email
+                };
+
+                try {
+                    // Check if code already exists (excluding current category)
+                    if (updatedData.code !== category.code) {
+                        const existingCategory = await db.collection('categories').where('code', '==', updatedData.code).get();
+                        if (!existingCategory.empty) {
+                            showToast('Kod kategori sudah wujud!', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                            return;
+                        }
+                    }
+
+                    await db.collection('categories').doc(categoryId).update(updatedData);
+                    await logActivity('EDIT_CATEGORY', `Updated category: ${updatedData.name}`, categoryId);
+                    await logAudit('category', categoryId, 'UPDATE', category, updatedData);
+                    showToast('Kategori berjaya dikemaskini!', 'success');
+                    closeModal(modal.querySelector('.modal-close'));
+                } catch (error) {
+                    showToast('Ralat mengemaskini kategori: ' + error.message, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="btn-icon">💾</span> <span>Simpan Perubahan</span>';
+                }
+            });
+        }
+
+        function confirmDeleteCategory(categoryId) {
+            const category = currentCategories.find(c => c.id === categoryId);
+            if (!category) {
+                showToast('Kategori tidak dijumpai', 'error');
+                return;
+            }
+
+            // Check if category has assets
+            const categoryAssets = currentAssets.filter(a => a.kategori === category.name);
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Padam Kategori</h3>
+                        <button class="modal-close" onclick="closeModal(this)">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 16px;">Adakah anda pasti mahu memadam kategori ini?</p>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            <p><strong>Kod:</strong> ${category.code || 'N/A'}</p>
+                            <p><strong>Nama:</strong> ${category.name || 'N/A'}</p>
+                            <p><strong>Jenis:</strong> ${category.type || 'N/A'}</p>
+                        </div>
+                        ${categoryAssets.length > 0 ? `
+                            <div style="background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #fecaca;">
+                                <p style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">⚠️ Amaran!</p>
+                                <p style="color: #991b1b;">Kategori ini mempunyai <strong>${categoryAssets.length} aset</strong> yang berkaitan.</p>
+                                <p style="color: #991b1b; font-size: 13px; margin-top: 8px;">Sila tukar kategori aset tersebut terlebih dahulu atau padam aset tersebut.</p>
+                            </div>
+                        ` : `
+                            <p style="color: #ef4444; font-size: 14px;">⚠️ Tindakan ini tidak boleh dibatalkan!</p>
+                        `}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal(this)">Batal</button>
+                        ${categoryAssets.length === 0 ? `
+                            <button class="btn btn-danger" onclick="executeDeleteCategory('${categoryId}')">
+                                <span class="btn-icon">🗑️</span>
+                                <span>Ya, Padam</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+        }
+
+        async function executeDeleteCategory(categoryId) {
+            const category = currentCategories.find(c => c.id === categoryId);
+            
+            try {
+                await db.collection('categories').doc(categoryId).delete();
+                await logActivity('DELETE_CATEGORY', `Deleted category: ${category.name}`, categoryId);
+                await logAudit('category', categoryId, 'DELETE', category, null);
+                showToast('Kategori berjaya dipadam', 'success');
+                
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+            } catch (error) {
+                showToast('Ralat memadam kategori: ' + error.message, 'error');
+            }
+        }
+
+        async function exportCategoriesToExcel() {
+            if (currentCategories.length === 0) {
+                showToast('Tiada data untuk di-export', 'error');
+                return;
+            }
+
+            const data = currentCategories.map(category => {
+                const assetCount = currentAssets.filter(a => a.kategori === category.name).length;
+                return {
+                    'Kod': category.code || '',
+                    'Nama Kategori': category.name || '',
+                    'Jenis': category.type || '',
+                    'Penerangan': category.description || '',
+                    'Jumlah Aset': assetCount,
+                    'Dicipta Oleh': category.createdBy || '',
+                    'Dikemaskini Oleh': category.updatedBy || ''
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Kategori');
+
+            const filename = `Kategori_Aset_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            await logActivity('EXPORT_CATEGORIES', `Exported ${currentCategories.length} categories to Excel`);
+            showToast('Data kategori berjaya di-export!', 'success');
+        }
+
+        function showNotifications() {
+            addToNavigationHistory('notifications');
+            currentPage = 'notifications';
+            updateActiveNav('notifications');
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Notifikasi</h1>
+                    <p class="page-subtitle">Lihat semua notifikasi sistem</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">��</div>
+                        <div class="empty-title">Notifikasi</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAuditTrail() {
+            addToNavigationHistory('auditTrail');
+            currentPage = 'auditTrail';
+            updateActiveNav('auditTrail');
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Audit Trail</h1>
+                    <p class="page-subtitle">Jejak audit perubahan data</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div class="empty-title">Audit Trail</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showRoles() {
+            addToNavigationHistory('roles');
+            currentPage = 'roles';
+            updateActiveNav('roles');
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Peranan & Akses</h1>
+                    <p class="page-subtitle">Urus peranan pengguna dan hak akses</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎭</div>
+                        <div class="empty-title">Peranan & Akses</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showSettings() {
+            addToNavigationHistory('settings');
+            currentPage = 'settings';
+            updateActiveNav('settings');
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Tetapan Sistem</h1>
+                    <p class="page-subtitle">Konfigurasi sistem dan parameter</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">⚙️</div>
+                        <div class="empty-title">Tetapan Sistem</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showProfile() {
+            addToNavigationHistory('profile');
+            currentPage = 'profile';
+            updateActiveNav('profile');
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">Profil Saya</h1>
+                    <p class="page-subtitle">Urus maklumat profil anda</p>
+                </div>
+                <div class="content-card">
+                    <div class="empty-state">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-title">Profil Pengguna</div>
+                        <div class="empty-text">Modul ini sedang dalam pembangunan</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // === UTILITY FUNCTIONS ===
+        function closeModal(btn) {
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => modal.remove(), 200);
+            }
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a044f6856069a6e',t:'MTc2MzQzNTc5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
